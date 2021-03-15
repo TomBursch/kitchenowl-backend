@@ -27,6 +27,7 @@ scheduler.api_enabled = False
 scheduler.init_app(app)
 scheduler.start()
 
+
 @app.after_request
 def add_cors_headers(response):
     if not request.referrer:

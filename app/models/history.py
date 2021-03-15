@@ -4,9 +4,12 @@ from .item import Item
 from .shoppinglist import Shoppinglist
 
 import enum
+
+
 class Status(enum.Enum):
     ADDED = 1
     DROPPED = -1
+
 
 class History(db.Model, DbModelMixin, TimestampMixin):
     __tablename__ = 'history'
@@ -18,23 +21,23 @@ class History(db.Model, DbModelMixin, TimestampMixin):
     item_id = db.Column(db.Integer, db.ForeignKey('item.id'))
 
     item = db.relationship("Item", uselist=False, back_populates="history")
-    
+
     status = db.Column(db.Enum(Status))
 
     @classmethod
     def create_added(cls, shoppinglist, item):
         return cls(
-            shoppinglist_id = shoppinglist.id,
-            item_id = item.id,
-            status = Status.ADDED
+            shoppinglist_id=shoppinglist.id,
+            item_id=item.id,
+            status=Status.ADDED
         ).save()
-    
+
     @classmethod
     def create_dropped(cls, shoppinglist, item):
         return cls(
-            shoppinglist_id = shoppinglist.id,
-            item_id = item.id,
-            status = Status.DROPPED
+            shoppinglist_id=shoppinglist.id,
+            item_id=item.id,
+            status=Status.DROPPED
         ).save()
 
     def obj_to_item_dict(self):
@@ -45,14 +48,14 @@ class History(db.Model, DbModelMixin, TimestampMixin):
     @classmethod
     def find_added_by_shoppinglist_id(cls, shoppinglist_id):
         return cls.query.filter(cls.shoppinglist_id == shoppinglist_id, cls.status == Status.ADDED).all()
-    
+
     @classmethod
     def find_dropped_by_shoppinglist_id(cls, shoppinglist_id):
         return cls.query.filter(cls.shoppinglist_id == shoppinglist_id, cls.status == Status.DROPPED).all()
 
     @classmethod
     def find_by_shoppinglist_id(cls, shoppinglist_id):
-        return cls.query.filter(cls.shoppinglist_id == t).all()
+        return cls.query.filter(cls.shoppinglist_id == shoppinglist_id).all()
 
     @classmethod
     def find_all(cls):

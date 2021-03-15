@@ -1,6 +1,7 @@
 from app import db
 from app.helpers import DbModelMixin, TimestampMixin
 
+
 class Association(db.Model, DbModelMixin, TimestampMixin):
     __tablename__ = 'association'
 
@@ -12,17 +13,19 @@ class Association(db.Model, DbModelMixin, TimestampMixin):
     confidence = db.Column(db.Float)
     lift = db.Column(db.Float)
 
-    antecedent = db.relationship("Item", uselist=False, foreign_keys=[antecedent_id], back_populates="antecedents")
-    consequent = db.relationship("Item", uselist=False, foreign_keys=[consequent_id], back_populates="consequents")
+    antecedent = db.relationship("Item", uselist=False, foreign_keys=[
+                                 antecedent_id], back_populates="antecedents")
+    consequent = db.relationship("Item", uselist=False, foreign_keys=[
+                                 consequent_id], back_populates="consequents")
 
     @classmethod
     def create(cls, antecedent_id, consequent_id, support, confidence, lift):
         return cls(
-            antecedent_id = antecedent_id,
-            consequent_id = consequent_id,
-            support = support,
-            confidence = confidence,
-            lift = lift
+            antecedent_id=antecedent_id,
+            consequent_id=consequent_id,
+            support=support,
+            confidence=confidence,
+            lift=lift
         ).save()
 
     @classmethod

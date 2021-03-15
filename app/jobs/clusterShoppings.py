@@ -4,12 +4,13 @@ import time
 from dbscan1d.core import DBSCAN1D
 import numpy as np
 
+
 def clusterShoppings():
     dropped = History.find_dropped_by_shoppinglist_id(1)
-    
+
     # determine shopping instances via clustering
     times = [int(time.mktime(d.created_at.timetuple())) for d in dropped]
-    
+
     timestamps = np.array(times)
     # time distance for items to be considered in one shopping action (in seconds)
     eps = 600
@@ -26,11 +27,13 @@ def clusterShoppings():
         if labels[i] > -1:
             clusters[label].append(i)
 
-    # indices to list of itemlists for each found shopping instance       
-    shopping_instances = [[dropped[i].item_id for i in cluster] for cluster in clusters]
+    # indices to list of itemlists for each found shopping instance
+    shopping_instances = [[dropped[i].item_id for i in cluster]
+                          for cluster in clusters]
 
     # remove duplicates in the instances
-    shopping_instances = [list(set(instance)) for instance in shopping_instances]
+    shopping_instances = [list(set(instance))
+                          for instance in shopping_instances]
 
     print('the found shopping instances are:')
     print(shopping_instances)
