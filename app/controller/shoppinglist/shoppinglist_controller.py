@@ -156,10 +156,11 @@ def addRecipeItems(args, id):
                 con.save()
             else:
                 con = ShoppinglistItems(description=description)
-                con.item = item
-                shoppinglist.items.append(con)
-        
-        History.create_added(shoppinglist, item)
+                con.item = item        
+                con.shoppinglist = shoppinglist
+                con.save()
+            
+            History.create_added(shoppinglist, item)
 
     shoppinglist.save()
     return jsonify(item.obj_to_dict())
