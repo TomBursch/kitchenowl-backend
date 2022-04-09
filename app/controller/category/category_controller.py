@@ -2,8 +2,8 @@ from app.helpers import validate_args
 from flask import jsonify, Blueprint
 from app.errors import NotFoundRequest
 from flask_jwt_extended import jwt_required
-from app.models import Category, RecipeCategories, Recipe
-from .schemas import SearchByNameRequest, AddCategory
+from app.models import Category
+from .schemas import AddCategory
 
 category = Blueprint('category', __name__)
 

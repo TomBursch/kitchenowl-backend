@@ -33,8 +33,9 @@ class Item(db.Model, DbModelMixin, TimestampMixin):
     def obj_to_export_dict(self):
         res = {
             "name": self.name,
-            "category": self.category.name
         }
+        if self.category:
+            res["category"] = self.category.name
         return res
 
     @classmethod
@@ -43,6 +44,13 @@ class Item(db.Model, DbModelMixin, TimestampMixin):
             name=name,
             default=default,
         ).save()
+
+    @classmethod
+    def allByName(cls):
+        """
+        Return all instances of Item ordered by name
+        """
+        return cls.query.order_by(cls.name).all()
 
     @classmethod
     def find_by_name(cls, name) -> Item:
