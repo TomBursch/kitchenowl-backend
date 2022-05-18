@@ -3,7 +3,7 @@ from flask import jsonify, Blueprint
 from app.errors import NotFoundRequest
 from flask_jwt_extended import jwt_required
 from app.models import Category
-from .schemas import AddCategory
+from .schemas import AddCategory, DeleteCategory
 
 category = Blueprint('category', __name__)
 
@@ -38,3 +38,15 @@ def addCategory(args):
 def deleteCategoryById(id):
     Category.delete_by_id(id)
     return jsonify({'msg': 'DONE'})
+
+
+@category.route('', methods=['DELETE'])
+@jwt_required()
+@validate_args(DeleteCategory)
+def deleteExpenseCategoryById(args):
+    if "name" in args:
+        category = Category.find_by_name(args['name'])
+        if category:
+            category.delete()
+            return jsonify({'msg': 'DONE'})
+    raise NotFoundRequest()

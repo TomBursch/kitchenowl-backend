@@ -11,7 +11,7 @@ class Category(db.Model, DbModelMixin, TimestampMixin):
     default = db.Column(db.Boolean, default=False)
 
     items = db.relationship(
-        'Item', back_populates='category', cascade="all, delete-orphan")
+        'Item', back_populates='category')
 
     def obj_to_full_dict(self) -> dict:
         res = super().obj_to_dict()

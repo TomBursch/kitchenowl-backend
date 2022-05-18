@@ -1,6 +1,7 @@
 from __future__ import annotations
 from app import db
 from app.helpers import DbModelMixin, TimestampMixin
+from app.models.category import Category
 
 
 class Item(db.Model, DbModelMixin, TimestampMixin):
@@ -29,6 +30,13 @@ class Item(db.Model, DbModelMixin, TimestampMixin):
         "Association", back_populates="antecedent", foreign_keys='Association.antecedent_id')
     consequents = db.relationship(
         "Association", back_populates="consequent", foreign_keys='Association.consequent_id')
+
+    def obj_to_dict(self):
+        res = super().obj_to_dict()
+        if self.category_id:
+            category = Category.find_by_id(self.category_id)
+            res['category'] = category.obj_to_dict()
+        return res
 
     def obj_to_export_dict(self):
         res = {

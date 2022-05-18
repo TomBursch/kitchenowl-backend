@@ -10,7 +10,7 @@ class ExpenseCategory(db.Model, DbModelMixin, TimestampMixin):
     name = db.Column(db.String(128))
 
     expenses = db.relationship(
-        'Expense', back_populates='category', cascade="all, delete-orphan")
+        'Expense', back_populates='category')
 
     def obj_to_full_dict(self) -> dict:
         res = super().obj_to_dict()
