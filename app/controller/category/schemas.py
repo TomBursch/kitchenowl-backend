@@ -6,6 +6,7 @@ class AddCategory(Schema):
         required=True
     )
 
+
 class DeleteCategory(Schema):
     name = fields.String(
         required=True
