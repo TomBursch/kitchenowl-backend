@@ -9,6 +9,9 @@ RUN apt-get update \
         libxml2-dev libxslt-dev cmake gfortran libopenblas-dev liblapack-dev pkg-config ninja-build \
          autoconf automake zlib1g-dev libjpeg62-turbo-dev
 
+RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
+ENV PATH="/root/.cargo/bin:$PATH"
+
 # Create virtual enviroment
 RUN python -m venv /opt/venv && /opt/venv/bin/pip install --no-cache-dir -U pip setuptools wheel
 ENV PATH="/opt/venv/bin:$PATH"
