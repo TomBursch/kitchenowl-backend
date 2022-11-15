@@ -3,8 +3,8 @@ import re
 import uuid
 
 import requests
-from werkzeug.utils import secure_filename
-
+from app.util.filename_validator import allowed_file
+from app.config import UPLOAD_FOLDER
 from app.errors import NotFoundRequest
 from app.models.recipe import RecipeItems, RecipeTags
 from flask import jsonify, Blueprint
@@ -13,9 +13,8 @@ from app.helpers import validate_args
 from app.models import Recipe, Item, Tag
 from recipe_scrapers import scrape_me
 from recipe_scrapers._exceptions import SchemaOrgException
+from werkzeug.utils import secure_filename
 from .schemas import SearchByNameRequest, AddRecipe, UpdateRecipe, GetAllFilterRequest, ScrapeRecipe
-from ...config import UPLOAD_FOLDER
-from ...util.filename_validator import allowed_file
 
 recipe = Blueprint('recipe', __name__)
 
