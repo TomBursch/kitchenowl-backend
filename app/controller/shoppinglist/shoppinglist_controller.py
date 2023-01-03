@@ -7,6 +7,7 @@ from .schemas import (RemoveItem, UpdateDescription,
                       AddItemByName, CreateList, AddRecipeItems, GetItems)
 from app.errors import NotFoundRequest
 from datetime import datetime, timedelta, timezone
+import app.util.description_merger as description_merger
 
 
 shoppinglist = Blueprint('shoppinglist', __name__)
@@ -196,15 +197,7 @@ def addRecipeItems(args, id):
             con = ShoppinglistItems.find_by_ids(shoppinglist.id, item.id)
             if con:
                 # merge descriptions
-                if description and con.description:
-                    con.description = description + ', ' + con.description
-                elif description:
-                    con.description = description + ', ...'
-                elif con.description:
-                    if not con.description.endswith('...'):
-                        con.description = con.description + ', ...'
-                else:
-                    con.description = '...'
+                con.description = description_merger.merge(con.description, description)
                 con.save()
             else:
                 con = ShoppinglistItems(description=description)
