@@ -23,7 +23,7 @@ NUMBER.10: FLOAT | INT
 
 class TreeItem(Tree):
     # Quick and dirty class to not build an AST
-    def __init__(self, data: str, children: 'List[Branch[_Leaf_T]]') -> None:
+    def __init__(self, data: str, children) -> None:
         self.data = data
         self.children = children
         self.number: Token = None
