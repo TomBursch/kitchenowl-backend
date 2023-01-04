@@ -13,6 +13,7 @@ import app.util.description_merger as description_merger
     ("½", "1/2", "1"),
     ("500g", "1kg", "1500g"),
     ("Gouda", "Gouda", "2 Gouda"),
+    ("Gouda", "Emmentaler", "Gouda, Emmentaler"),
     ("Gouda", "", "Gouda, 1x"),
     ("1 bag of Kartoffeln", "1 bag of Kartoffeln", "2 bag of Kartoffeln"),
     (",500ml,", "500ml", "1L"),
@@ -25,6 +26,11 @@ import app.util.description_merger as description_merger
     ("1", "1X", "2"),
     (".2233", "1/5", "0.4233"),
     ("1x", "1/3", "1.33333x"),
+    ("1", "1, 1, 2", "5"),
+    ("1, 2", "1", "2, 2"),
+    ("1,2", "1", "2.2")
+    # ("1-2", "3-4", "1-2, 3-4"),
+    # ("100g fresh", "100g fresh", "200g fresh")
 ])
 def testDescriptionMerge(des, added, result):
     assert description_merger.merge(des, added) == result

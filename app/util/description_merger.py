@@ -1,3 +1,4 @@
+from typing import Self
 from lark import Lark, Transformer, Tree, Token
 from lark.visitors import Interpreter
 import re
@@ -12,7 +13,7 @@ SI_WEIGHT.5: "mg"i | "g"i | "kg"i
 SI_VOLUME.5: "ml"i | "l"i
 DESCRIPTION: /[^0-9, ][^,]*/
 
-DECIMAL: INT ("." | ",") INT? | "." INT
+DECIMAL: INT "." INT? | "." INT | INT "," INT
 FLOAT: INT _EXP | DECIMAL _EXP?
 NUMBER.10: FLOAT | INT
 
@@ -33,6 +34,14 @@ class TreeItem(Tree):
                 self.number = c
             else:
                 self.unit = c
+
+    def unitIsCount(self) -> bool:
+        return not self.unit or self.unit.children[0].type == "COUNT"
+
+    def sameUnit(self, other: Self) -> bool:
+        return (self.unitIsCount() and other.unitIsCount()) or (self.unit and other.unit and
+                                                (self.unit.children[0].type == other.unit.children[0].type and not other.unit.children[0].type == "DESCRIPTION"
+                                                 or self.unit.children[0].lower().strip() == other.unit.children[0].lower().strip()))
 
 
 class T(Transformer):
@@ -79,27 +88,17 @@ def merge(description: str, added: str) -> str:
     addTree = transformer.transform(parser.parse(added))
 
     for item in addTree.children:
-        unit: Tree = item.unit
-        targetItem: TreeItem = None
-        if not unit or unit.children[0].type == "COUNT":
-            # find where no unit or count (x)
-            targetItem = next(desTree.find_pred(lambda t: t.data ==
-                                                "item" and (not t.unit or t.unit.children[0].type == "COUNT")), None)
-        else:
-            # find where unit type is equal (SI_WEIGHT == SI_WEIGHT) but not description or description is equal ("halves" == "halves")
-            targetItem = next(desTree.find_pred(lambda t: t.data ==
-                                                "item" and t.unit and
-                                                (t.unit.children[0].type == unit.children[0].type and not t.unit.children[0].type == "DESCRIPTION"
-                                                 or t.unit.children[0].lower() == unit.children[0].lower())), None)
+        targetItem: TreeItem =  next(desTree.find_pred(lambda t: t.data == "item" and item.sameUnit(t)), None)
 
         if not targetItem:  # No item with same unit
             desTree.children.append(item)
         else:  # Found item with same unit
-            if not targetItem.number:  # Add number if not present
+            if not targetItem.number:  # Add number if not present and space behind it if description
                 targetItem.number = Token("NUMBER", 1)
                 targetItem.children.insert(0, targetItem.number)
 
             # Add up numbers
+            unit: Tree = item.unit
             if unit and unit.children[0].type == "SI_WEIGHT":
                 merge_SI_Weight(targetItem, item)
             elif unit and unit.children[0].type == "SI_VOLUME":

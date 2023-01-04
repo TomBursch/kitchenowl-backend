@@ -190,24 +190,31 @@ def addRecipeItems(args, id):
     if not shoppinglist:
         raise NotFoundRequest()
 
-    for recipeItem in args['items']:
-        item = Item.find_by_id(recipeItem['id'])
-        if item:
-            description = recipeItem['description']
-            con = ShoppinglistItems.find_by_ids(shoppinglist.id, item.id)
-            if con:
-                # merge descriptions
-                con.description = description_merger.merge(con.description, description)
-                con.save()
-            else:
-                con = ShoppinglistItems(description=description)
-                con.item = item
-                con.shoppinglist = shoppinglist
-                con.save()
+    try:
+        for recipeItem in args['items']:
+            item = Item.find_by_id(recipeItem['id'])
+            if item:
+                description = recipeItem['description']
+                con = ShoppinglistItems.find_by_ids(shoppinglist.id, item.id)
+                if con:
+                    # merge descriptions
+                    con.description = description_merger.merge(
+                        con.description, description)
+                    db.session.add(con)
+                else:
+                    con = ShoppinglistItems(description=description)
+                    con.item = item
+                    con.shoppinglist = shoppinglist
+                    db.session.add(con)
 
-            History.create_added(shoppinglist, item)
+                db.session.add(
+                    History.create_added_without_save(shoppinglist, item))
 
-    shoppinglist.save()
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        raise e
+
     return jsonify(item.obj_to_dict())
 
 # @shoppinglist.route('/<id>/item', methods=['POST'])
