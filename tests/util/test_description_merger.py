@@ -23,6 +23,8 @@ import app.util.description_merger as description_merger
     ("1 cup of 2ml sugar", "other", "1 cup of 2ml sugar, other"),
     ("1 TL", "1tl", "2 TL"),
     ("1", "1X", "2"),
+    (".2233", "1/5", "0.4233"),
+    ("1x", "1/3", "1.33333x"),
 ])
 def testDescriptionMerge(des, added, result):
     assert description_merger.merge(des, added) == result

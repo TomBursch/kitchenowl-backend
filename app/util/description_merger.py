@@ -52,8 +52,8 @@ class Printer(Interpreter):
                     res += " "
                 res += self.visit(child)
             elif child.type == 'NUMBER':
-                res += str(int(child.value)
-                           ) if child.value.is_integer() else f"{child.value:.2f}"
+                value = round(child.value, 5)
+                res += str(int(value)) if value.is_integer() else f"{value}"
         return res
 
     def unit(self, unit: Tree):
