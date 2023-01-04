@@ -77,27 +77,36 @@ def merge(description: str, added: str) -> str:
     added = clean(added)
     desTree = transformer.transform(parser.parse(description))
     addTree = transformer.transform(parser.parse(added))
-    print(desTree)
 
     for item in addTree.children:
-        unit = item.unit
-        res: TreeItem = None
-        if not unit:
-            res = next(desTree.find_pred(lambda t: t.data ==
-                       "item" and (not t.unit or t.unit.children[0].type == "COUNT")), None)
+        unit: Tree = item.unit
+        targetItem: TreeItem = None
+        if not unit or unit.children[0].type == "COUNT":
+            # find where no unit or count (x)
+            targetItem = next(desTree.find_pred(lambda t: t.data ==
+                                                "item" and (not t.unit or t.unit.children[0].type == "COUNT")), None)
         else:
-            res = next(desTree.find_pred(lambda t: t.data ==
-                       "item" and t.unit == unit), None)
+            # find where unit type is equal (SI_WEIGHT == SI_WEIGHT) but not description or description is equal ("halves" == "halves")
+            targetItem = next(desTree.find_pred(lambda t: t.data ==
+                                                "item" and t.unit and
+                                                (t.unit.children[0].type == unit.children[0].type and not t.unit.children[0].type == "DESCRIPTION"
+                                                 or t.unit.children[0].lower() == unit.children[0].lower())), None)
 
-        if not res:
+        if not targetItem:  # No item with same unit
             desTree.children.append(item)
-        else:
-            if not res.number:
-                res.number = Token("NUMBER", 1)
-                res.children.insert(0, res.number)
+        else:  # Found item with same unit
+            if not targetItem.number:  # Add number if not present
+                targetItem.number = Token("NUMBER", 1)
+                targetItem.children.insert(0, targetItem.number)
 
-            res.number.value = res.number.value + \
-                (item.number.value if item.number else 1.0)
+            # Add up numbers
+            if unit and unit.children[0].type == "SI_WEIGHT":
+                merge_SI_Weight(targetItem, item)
+            elif unit and unit.children[0].type == "SI_VOLUME":
+                merge_SI_Volume(targetItem, item)
+            else:
+                targetItem.number.value = targetItem.number.value + \
+                    (item.number.value if item.number else 1.0)
 
     return Printer().visit(desTree)
 
@@ -137,3 +146,34 @@ def clean(input: str) -> str:
     )
 
     return input
+
+
+def merge_SI_Volume(base: TreeItem, add: TreeItem) -> None:
+    def toMl(x: float, unit: str):
+        return {'ml': x, 'l': 1000*x}.get(unit.lower())
+
+    base.number.value = toMl(base.number.value, base.unit.children[0]) + \
+        toMl(add.number.value if add.number else 1.0, add.unit.children[0])
+    base.unit.children[0] = base.unit.children[0].update(value='ml')
+
+    # Simplify if possible
+    if (base.number.value/1000).is_integer():
+        base.number.value = base.number.value/1000
+        base.unit.children[0] = base.unit.children[0].update(value='L')
+
+
+def merge_SI_Weight(base: TreeItem, add: TreeItem) -> None:
+    def toG(x: float, unit: str):
+        return {'mg': x/1000, 'g': x, 'kg': 1000*x}.get(unit.lower())
+
+    base.number.value = toG(base.number.value, base.unit.children[0]) + \
+        toG(add.number.value if add.number else 1.0, add.unit.children[0])
+    base.unit.children[0] = base.unit.children[0].update(value='g')
+
+    # Simplify when possible
+    if base.number.value < 1:
+        base.number.value = base.number.value*1000
+        base.unit.children[0] = base.unit.children[0].update(value='mg')
+    elif (base.number.value/1000).is_integer():
+        base.number.value = base.number.value/1000
+        base.unit.children[0] = base.unit.children[0].update(value='kg')
