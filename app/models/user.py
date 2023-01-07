@@ -1,4 +1,4 @@
-from typing import Self
+from __future__ import annotations
 from app import db
 from app.helpers import DbModelMixin, TimestampMixin
 from app.config import bcrypt
@@ -48,11 +48,11 @@ class User(db.Model, DbModelMixin, TimestampMixin):
         return res
 
     @classmethod
-    def find_by_username(cls, username: str) -> Self:
+    def find_by_username(cls, username: str) -> User:
         return cls.query.filter(cls.username == username).first()
 
     @classmethod
-    def create(cls, username: str, password: str, name: str, owner=False) -> Self:
+    def create(cls, username: str, password: str, name: str, owner=False) -> User:
         return cls(
             username=username,
             password=bcrypt.generate_password_hash(password).decode('utf-8'),

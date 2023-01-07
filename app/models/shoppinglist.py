@@ -1,4 +1,4 @@
-from typing import Self
+from __future__ import annotations
 from app import db
 from app.helpers import DbModelMixin, TimestampMixin
 
@@ -12,7 +12,7 @@ class Shoppinglist(db.Model, DbModelMixin, TimestampMixin):
     items = db.relationship('ShoppinglistItems')
 
     @classmethod
-    def create(cls, name) -> Self:
+    def create(cls, name) -> Shoppinglist:
         return cls(name=name).save()
 
 
@@ -35,5 +35,5 @@ class ShoppinglistItems(db.Model, DbModelMixin, TimestampMixin):
         return res
 
     @classmethod
-    def find_by_ids(cls, shoppinglist_id: int, item_id: int) -> Self:
+    def find_by_ids(cls, shoppinglist_id: int, item_id: int) -> ShoppinglistItems:
         return cls.query.filter(cls.shoppinglist_id == shoppinglist_id, cls.item_id == item_id).first()

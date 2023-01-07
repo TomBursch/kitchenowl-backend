@@ -1,4 +1,4 @@
-from typing import Self
+from __future__ import annotations
 from app import db
 from app.helpers import DbModelMixin, TimestampMixin
 
@@ -17,15 +17,15 @@ class Tag(db.Model, DbModelMixin, TimestampMixin):
         return res
 
     @classmethod
-    def create_by_name(cls, name: str) -> Self:
+    def create_by_name(cls, name: str) -> Tag:
         return cls(
             name=name,
         ).save()
 
     @classmethod
-    def find_by_name(cls, name: str) -> Self:
+    def find_by_name(cls, name: str) -> Tag:
         return cls.query.filter(cls.name == name).first()
 
     @classmethod
-    def find_by_id(cls, id: int) -> Self:
+    def find_by_id(cls, id: int) -> Tag:
         return cls.query.filter(cls.id == id).first()

@@ -1,12 +1,11 @@
 from __future__ import annotations
-from typing import Self
 from sqlalchemy import asc, desc
 from app import db
 
 
 class DbModelMixin(object):
 
-    def save(self) -> Self:
+    def save(self) -> DbModelMixin:
         """
         Persist changes to current instance in db
         """
@@ -19,7 +18,7 @@ class DbModelMixin(object):
 
         return self
 
-    def assign(self, **kwargs) -> Self:
+    def assign(self, **kwargs) -> DbModelMixin:
         """
         Update an entry
         """
@@ -101,7 +100,7 @@ class DbModelMixin(object):
 
         return d
 
-    def clone(self, overrides) -> Self:
+    def clone(self, overrides) -> DbModelMixin:
         new_self = self.__class__()
         new_self.assign_columns(self.obj_to_dict())
 
@@ -112,21 +111,21 @@ class DbModelMixin(object):
         return new_self
 
     @classmethod
-    def find_by_id(cls, target_id: int) -> Self:
+    def find_by_id(cls, target_id: int) -> DbModelMixin:
         """
         Find the row with specified id
         """
         return cls.query.filter(cls.id == target_id).first()
 
     @classmethod
-    def find_all_by_id(cls, target_id: int) -> list[Self]:
+    def find_all_by_id(cls, target_id: int) -> list[DbModelMixin]:
         """
         Find all the rows with specified id
         """
         return cls.query.filter(cls.id == target_id).all()
 
     @classmethod
-    def find_all_by_ids(cls, target_ids: list[int]) -> list[Self]:
+    def find_all_by_ids(cls, target_ids: list[int]) -> list[DbModelMixin]:
         """
         Find all the rows with specified id
         """
@@ -139,14 +138,14 @@ class DbModelMixin(object):
             mc.delete()
 
     @classmethod
-    def all(cls) -> list[Self]:
+    def all(cls) -> list[DbModelMixin]:
         """
         Return all instances of model
         """
         return cls.query.order_by(cls.id).all()
 
     @classmethod
-    def all_by_name(cls) -> list[Self]:
+    def all_by_name(cls) -> list[DbModelMixin]:
         """
         Return all instances of model ordered by name
         IMPORTANT: requires name column
@@ -154,7 +153,7 @@ class DbModelMixin(object):
         return cls.query.order_by(cls.name).all()
 
     @classmethod
-    def first(cls) -> Self:
+    def first(cls) -> DbModelMixin:
         """
         Returns the first entry of database
         """
@@ -165,7 +164,7 @@ class DbModelMixin(object):
         return None
 
     @classmethod
-    def last(cls) -> Self:
+    def last(cls) -> DbModelMixin:
         """
         Return the last entry of table in database
         """

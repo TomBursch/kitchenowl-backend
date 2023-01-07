@@ -1,6 +1,6 @@
 from __future__ import annotations
 from datetime import datetime
-from typing import Self, Tuple
+from typing import Tuple
 
 from flask import request
 from app import db
@@ -36,7 +36,7 @@ class Token(db.Model, DbModelMixin, TimestampMixin):
         return super().obj_to_dict(skip_columns=skip_columns, include_columns=include_columns)
 
     @classmethod
-    def find_by_jti(cls, jti: str) -> Self:
+    def find_by_jti(cls, jti: str) -> Token:
         return cls.query.filter(cls.jti == jti).first()
 
     @classmethod
@@ -77,7 +77,7 @@ class Token(db.Model, DbModelMixin, TimestampMixin):
         db.session.commit()
 
     @classmethod
-    def create_access_token(cls, user: User, refreshTokenModel: Self) -> Tuple[any, Self]:
+    def create_access_token(cls, user: User, refreshTokenModel: Token) -> Tuple[any, Token]:
         accesssToken = create_access_token(identity=user)
         model = cls()
         model.jti = get_jti(accesssToken)
@@ -89,7 +89,7 @@ class Token(db.Model, DbModelMixin, TimestampMixin):
         return accesssToken, model
 
     @classmethod
-    def create_refresh_token(cls, user: User, device: str = None, oldRefreshToken: Self = None) -> Tuple[any, Self]:
+    def create_refresh_token(cls, user: User, device: str = None, oldRefreshToken: Token = None) -> Tuple[any, Token]:
         assert device or oldRefreshToken
         if (oldRefreshToken and (oldRefreshToken.type != 'refresh' or oldRefreshToken.has_created_refresh_token())):
             oldRefreshToken.delete_token_familiy()
@@ -109,7 +109,7 @@ class Token(db.Model, DbModelMixin, TimestampMixin):
         return refreshToken, model
 
     @classmethod
-    def create_longlived_token(cls, user: User, device: str) -> Tuple[any, Self]:
+    def create_longlived_token(cls, user: User, device: str) -> Tuple[any, Token]:
         accesssToken = create_access_token(identity=user, expires_delta=False)
         model = cls()
         model.jti = get_jti(accesssToken)

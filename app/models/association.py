@@ -1,4 +1,4 @@
-from typing import Self
+from __future__ import annotations
 from app import db
 from app.helpers import DbModelMixin, TimestampMixin
 
@@ -34,7 +34,7 @@ class Association(db.Model, DbModelMixin, TimestampMixin):
         return cls.query.filter(cls.antecedent_id == antecedent_id).order_by(cls.lift.desc())
 
     @classmethod
-    def find_all(cls) -> list[Self]:
+    def find_all(cls) -> list[Association]:
         return cls.query.all()
 
     @classmethod

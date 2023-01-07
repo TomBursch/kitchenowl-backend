@@ -1,5 +1,5 @@
+from __future__ import annotations
 from datetime import datetime
-from typing import Self
 from app import db
 from app.helpers import DbModelMixin, TimestampMixin
 from .shoppinglist import ShoppinglistItems
@@ -28,7 +28,7 @@ class History(db.Model, DbModelMixin, TimestampMixin):
     description = db.Column('description', db.String())
 
     @classmethod
-    def create_added_without_save(cls, shoppinglist, item, description='') -> Self:
+    def create_added_without_save(cls, shoppinglist, item, description='') -> History:
         return cls(
             shoppinglist_id=shoppinglist.id,
             item_id=item.id,
@@ -37,12 +37,12 @@ class History(db.Model, DbModelMixin, TimestampMixin):
         )
     
     @classmethod
-    def create_added(cls, shoppinglist, item, description='') -> Self:
+    def create_added(cls, shoppinglist, item, description='') -> History:
         return cls.create_added_without_save(shoppinglist, item, description).save()
     
 
     @classmethod
-    def create_dropped(cls, shoppinglist, item, description='', created_at=None) -> Self:
+    def create_dropped(cls, shoppinglist, item, description='', created_at=None) -> History:
         return cls(
             shoppinglist_id=shoppinglist.id,
             item_id=item.id,
@@ -57,23 +57,23 @@ class History(db.Model, DbModelMixin, TimestampMixin):
         return res
 
     @classmethod
-    def find_added_by_shoppinglist_id(cls, shoppinglist_id: int) -> list[Self]:
+    def find_added_by_shoppinglist_id(cls, shoppinglist_id: int) -> list[History]:
         return cls.query.filter(cls.shoppinglist_id == shoppinglist_id, cls.status == Status.ADDED).all()
 
     @classmethod
-    def find_dropped_by_shoppinglist_id(cls, shoppinglist_id: int) -> list[Self]:
+    def find_dropped_by_shoppinglist_id(cls, shoppinglist_id: int) -> list[History]:
         return cls.query.filter(cls.shoppinglist_id == shoppinglist_id, cls.status == Status.DROPPED).all()
 
     @classmethod
-    def find_by_shoppinglist_id(cls, shoppinglist_id: int) -> list[Self]:
+    def find_by_shoppinglist_id(cls, shoppinglist_id: int) -> list[History]:
         return cls.query.filter(cls.shoppinglist_id == shoppinglist_id).all()
 
     @classmethod
-    def find_all(cls) -> list[Self]:
+    def find_all(cls) -> list[History]:
         return cls.query.all()
 
     @classmethod
-    def get_recent(cls, shoppinglist_id: int) -> list[Self]:
+    def get_recent(cls, shoppinglist_id: int) -> list[History]:
         sq = db.session.query(ShoppinglistItems.item_id).filter(
             ShoppinglistItems.shoppinglist_id == shoppinglist_id).subquery().select(ShoppinglistItems.item_id)
         sq2 = db.session.query(func.max(cls.id)).filter(cls.status == Status.DROPPED).filter(

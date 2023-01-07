@@ -1,4 +1,4 @@
-from typing import Self
+from __future__ import annotations
 from app import db
 from app.helpers import DbModelMixin, TimestampMixin
 from app.helpers.db_list_type import DbListType
@@ -13,7 +13,7 @@ class Settings(db.Model, DbModelMixin, TimestampMixin):
     view_ordering = db.Column(DbListType(), default=list())
 
     @classmethod
-    def get(cls) -> Self:
+    def get(cls) -> Settings:
         settings = cls.query.first()
         if not settings:
             settings = cls()

@@ -1,5 +1,4 @@
 from __future__ import annotations
-from typing import Self
 from app import db
 from app.helpers import DbModelMixin, TimestampMixin
 from app.helpers.db_set_type import DbSetType
@@ -98,20 +97,20 @@ class Recipe(db.Model, DbModelMixin, TimestampMixin):
         db.session.commit()
 
     @classmethod
-    def find_suggestions(cls) -> list[Self]:
+    def find_suggestions(cls) -> list[Recipe]:
         return cls.query.filter(cls.planned == False).filter(  # noqa
             cls.suggestion_rank > 0).order_by(cls.suggestion_rank).all()
 
     @classmethod
-    def find_by_name(cls, name: str) -> Self:
+    def find_by_name(cls, name: str) -> Recipe:
         return cls.query.filter(cls.name == name).first()
 
     @classmethod
-    def find_by_id(cls, id: int) -> Self:
+    def find_by_id(cls, id: int) -> Recipe:
         return cls.query.filter(cls.id == id).first()
 
     @classmethod
-    def search_name(cls, name: str) -> list[Self]:
+    def search_name(cls, name: str) -> list[Recipe]:
         if '*' in name or '_' in name:
             looking_for = name.replace('_', '__')\
                 .replace('*', '%')\
@@ -121,7 +120,7 @@ class Recipe(db.Model, DbModelMixin, TimestampMixin):
         return cls.query.filter(cls.name.ilike(looking_for)).order_by(cls.name).all()
 
     @classmethod
-    def all_by_name_with_filter(cls, filter: list[str]) -> list[Self]:
+    def all_by_name_with_filter(cls, filter: list[str]) -> list[Recipe]:
         sq = db.session.query(RecipeTags.recipe_id).join(RecipeTags.tag).filter(
             Tag.name.in_(filter)).subquery()
         return db.session.query(cls).filter(cls.id.in_(sq)).order_by(cls.name).all()
@@ -159,7 +158,7 @@ class RecipeItems(db.Model, DbModelMixin, TimestampMixin):
         return res
 
     @classmethod
-    def find_by_ids(cls, recipe_id: int, item_id: int) -> Self:
+    def find_by_ids(cls, recipe_id: int, item_id: int) -> RecipeItems:
         return cls.query.filter(cls.recipe_id == recipe_id, cls.item_id == item_id).first()
 
 
@@ -180,5 +179,5 @@ class RecipeTags(db.Model, DbModelMixin, TimestampMixin):
         return res
 
     @classmethod
-    def find_by_ids(cls, recipe_id: int, tag_id: int) -> Self:
+    def find_by_ids(cls, recipe_id: int, tag_id: int) -> RecipeTags:
         return cls.query.filter(cls.recipe_id == recipe_id, cls.tag_id == tag_id).first()

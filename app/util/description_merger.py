@@ -1,4 +1,4 @@
-from typing import Self
+from __future__ import annotations
 from lark import Lark, Transformer, Tree, Token
 from lark.visitors import Interpreter
 import re
@@ -38,7 +38,7 @@ class TreeItem(Tree):
     def unitIsCount(self) -> bool:
         return not self.unit or self.unit.children[0].type == "COUNT"
 
-    def sameUnit(self, other: Self) -> bool:
+    def sameUnit(self, other: TreeItem) -> bool:
         return (self.unitIsCount() and other.unitIsCount()) or (self.unit and other.unit and
                                                 (self.unit.children[0].type == other.unit.children[0].type and not other.unit.children[0].type == "DESCRIPTION"
                                                  or self.unit.children[0].lower().strip() == other.unit.children[0].lower().strip()))
