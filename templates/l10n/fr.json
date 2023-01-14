@@ -1,1 +1,18 @@
-{}
+{
+  "categories": {
+    "bread": "🍞 Produits de boulangerie",
+    "canned": "🥫 Conserves",
+    "dairy": "🥛 Laitage",
+    "drinks": "🍹 Boissons",
+    "freezer": "❄️ Surgelé",
+    "fruits_vegetables": "🥬 Fruits et légumes",
+    "grain": "🥟 Produits céréaliers",
+    "hygiene": "🚽 Hygiène",
+    "refrigerated": "💧 Réfrigéré",
+    "snacks": "🥜 Collations"
+  },
+  "items": {
+    "aioli": "Aïoli",
+    "amaretto": "Amaretto"
+  }
+}
