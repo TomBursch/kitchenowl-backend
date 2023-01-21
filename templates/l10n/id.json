@@ -1,1 +1,10 @@
-{}
+{
+  "categories": {
+    "canned": "🥫 Makanan Kaleng",
+    "drinks": "🍹 Minuman",
+    "fruits_vegetables": "🥬 Buah dan sayur",
+    "hygiene": "🚽 Kebersihan",
+    "refrigerated": "💧 Didinginkan",
+    "snacks": "🥜 Camilan"
+  }
+}
