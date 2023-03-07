@@ -12,10 +12,4 @@ def get_health():
         'version': BACKEND_VERSION,
         'min_frontend_version': MIN_FRONTEND_VERSION,
     }
-    settings = Settings.get()
-    info.update({
-        'planner_feature': settings.planner_feature,
-        'expenses_feature': settings.expenses_feature,
-        'view_ordering': settings.view_ordering,
-    })
     return jsonify(info)

@@ -9,8 +9,11 @@ class Tag(db.Model, DbModelMixin, TimestampMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(128))
 
-    recipes = db.relationship(
-        'RecipeTags', back_populates='tag', cascade="all, delete-orphan")
+    household_id = db.Column(db.Integer, db.ForeignKey(
+        'household.id'), nullable=False)
+
+    household = db.relationship("Household", uselist=False)
+    recipes = db.relationship('RecipeTags', back_populates='tag')
 
     def obj_to_full_dict(self) -> dict:
         res = super().obj_to_dict()

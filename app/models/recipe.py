@@ -23,7 +23,9 @@ class Recipe(db.Model, DbModelMixin, TimestampMixin):
     source = db.Column(db.String())
     suggestion_score = db.Column(db.Integer, server_default='0')
     suggestion_rank = db.Column(db.Integer, server_default='0')
+    household_id = db.Column(db.Integer, db.ForeignKey('household.id'), nullable=False)
 
+    household = db.relationship("Household", uselist=False)
     recipe_history = db.relationship(
         "RecipeHistory", back_populates="recipe", cascade="all, delete-orphan")
     items = db.relationship(

@@ -2,7 +2,7 @@ from app.errors import NotFoundRequest
 from flask import jsonify, Blueprint
 from flask_jwt_extended import jwt_required
 from app import db
-from app.helpers import validate_args
+from app.helpers import validate_args, authorizeFor
 from app.models import Recipe, RecipeHistory, Planner
 from .schemas import AddPlannedRecipe, RemovePlannedRecipe
 
@@ -53,7 +53,7 @@ def addPlannedRecipe(args):
     return jsonify(recipe.obj_to_dict())
 
 
-@planner.route('/recipe/<id>', methods=['DELETE'])
+@planner.route('/recipe/<int:id>', methods=['DELETE'])
 @jwt_required()
 @validate_args(RemovePlannedRecipe)
 def removePlannedRecipeById(args, id):

@@ -7,7 +7,7 @@ from flask import jsonify, Blueprint
 from flask_jwt_extended import current_user, jwt_required
 from sqlalchemy import func
 from app import db
-from app.helpers import validate_args, admin_required
+from app.helpers import validate_args, admin_required, authorizeFor
 from app.models import Expense, ExpensePaidFor, User, ExpenseCategory
 from .schemas import GetExpenses, AddExpense, UpdateExpense, AddExpenseCategory, UpdateExpenseCategory, GetExpenseOverview
 
@@ -33,7 +33,7 @@ def getAllExpenses(args):
                     ])
 
 
-@expense.route('/<id>', methods=['GET'])
+@expense.route('/<int:id>', methods=['GET'])
 @jwt_required()
 def getExpenseById(id):
     expense = Expense.find_by_id(id)
@@ -84,7 +84,7 @@ def addExpense(args):
     return jsonify(expense.obj_to_dict())
 
 
-@expense.route('/<id>', methods=['POST'])
+@expense.route('/<int:id>', methods=['POST'])
 @jwt_required()
 @validate_args(UpdateExpense)
 def updateExpense(args, id):  # noqa: C901
@@ -134,7 +134,7 @@ def updateExpense(args, id):  # noqa: C901
     return jsonify(expense.obj_to_dict())
 
 
-@expense.route('/<id>', methods=['DELETE'])
+@expense.route('/<int:id>', methods=['DELETE'])
 @jwt_required()
 def deleteExpenseById(id):
     Expense.delete_by_id(id)
@@ -228,7 +228,7 @@ def addExpenseCategory(args):
     return jsonify(category.obj_to_dict())
 
 
-@expense.route('/categories/<id>', methods=['DELETE'])
+@expense.route('/categories/<int:id>', methods=['DELETE'])
 @jwt_required()
 @admin_required
 def deleteExpenseCategoryById(id):
@@ -236,7 +236,7 @@ def deleteExpenseCategoryById(id):
     return jsonify({'msg': 'DONE'})
 
 
-@expense.route('/categories/<id>', methods=['POST'])
+@expense.route('/categories/<int:id>', methods=['POST'])
 @jwt_required()
 @validate_args(UpdateExpenseCategory)
 def updateExpenseCategory(args, id):

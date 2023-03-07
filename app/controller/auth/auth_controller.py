@@ -129,7 +129,7 @@ def createLongLivedToken(args):
     })
 
 
-@auth.route('llt/<id>', methods=['DELETE'])
+@auth.route('llt/<int:id>', methods=['DELETE'])
 @jwt_required()
 def deleteLongLivedToken(id):
     user = User.find_by_username(get_jwt_identity())

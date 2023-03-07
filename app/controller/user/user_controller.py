@@ -22,7 +22,7 @@ def getLoggedInUser():
     return jsonify(current_user.obj_to_full_dict())
 
 
-@user.route('/<id>', methods=['GET'])
+@user.route('/<int:id>', methods=['GET'])
 @jwt_required()
 @admin_required
 def getUserById(id):
@@ -32,7 +32,7 @@ def getUserById(id):
     return jsonify(user.obj_to_dict())
 
 
-@user.route('/<id>', methods=['DELETE'])
+@user.route('/<int:id>', methods=['DELETE'])
 @jwt_required()
 @admin_required
 def deleteUserById(id):
@@ -60,7 +60,7 @@ def updateUser(args):
     return jsonify({'msg': 'DONE'})
 
 
-@user.route('/<id>', methods=['POST'])
+@user.route('/<int:id>', methods=['POST'])
 @jwt_required()
 @admin_required
 @validate_args(UpdateUser)

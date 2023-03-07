@@ -1,4 +1,4 @@
-from app.helpers import validate_args
+from app.helpers import validate_args, authorizeFor
 from flask import jsonify, Blueprint
 from app.errors import NotFoundRequest
 from flask_jwt_extended import jwt_required
@@ -14,7 +14,7 @@ def getAllTags():
     return jsonify([e.obj_to_dict() for e in Tag.all_by_name()])
 
 
-@tag.route('/<id>', methods=['GET'])
+@tag.route('/<int:id>', methods=['GET'])
 @jwt_required()
 def getTag(id):
     tag = Tag.find_by_id(id)
@@ -23,7 +23,7 @@ def getTag(id):
     return jsonify(tag.obj_to_dict())
 
 
-@tag.route('/<id>/recipes', methods=['GET'])
+@tag.route('/<int:id>/recipes', methods=['GET'])
 @jwt_required()
 def getTagRecipes(id):
     tags = RecipeTags.query.filter(
@@ -43,7 +43,7 @@ def addTag(args):
     return jsonify(tag.obj_to_dict())
 
 
-@tag.route('/<id>', methods=['POST'])
+@tag.route('/<int:id>', methods=['POST'])
 @jwt_required()
 @validate_args(UpdateTag)
 def updateTag(args, id):
@@ -58,7 +58,7 @@ def updateTag(args, id):
     return jsonify(tag.obj_to_dict())
 
 
-@tag.route('/<id>', methods=['DELETE'])
+@tag.route('/<int:id>', methods=['DELETE'])
 @jwt_required()
 def deleteTagById(id):
     Tag.delete_by_id(id)

@@ -1,6 +1,6 @@
-from app.helpers import validate_args
+from app.helpers import validate_args, authorizeFor, AccessType
 from flask import jsonify, Blueprint
-from app.errors import NotFoundRequest
+from app.errors import NotFoundRequest, UnauthorizedRequest
 from flask_jwt_extended import jwt_required
 from app.models import Category
 from .schemas import AddCategory, DeleteCategory, UpdateCategory
@@ -14,7 +14,7 @@ def getAllCategories():
     return jsonify([e.obj_to_dict() for e in Category.all_by_ordering()])
 
 
-@category.route('/<id>', methods=['GET'])
+@category.route('/<int:id>', methods=['GET'])
 @jwt_required()
 def getCategory(id):
     category = Category.find_by_id(id)
@@ -33,7 +33,7 @@ def addCategory(args):
     return jsonify(category.obj_to_dict())
 
 
-@category.route('/<id>', methods=['POST'])
+@category.route('/<int:id>', methods=['POST', 'PATCH'])
 @jwt_required()
 @validate_args(UpdateCategory)
 def updateCategory(args, id):
@@ -49,7 +49,7 @@ def updateCategory(args, id):
     return jsonify(category.obj_to_dict())
 
 
-@category.route('/<id>', methods=['DELETE'])
+@category.route('/<int:id>', methods=['DELETE'])
 @jwt_required()
 def deleteCategoryById(id):
     Category.delete_by_id(id)
@@ -59,7 +59,7 @@ def deleteCategoryById(id):
 @category.route('', methods=['DELETE'])
 @jwt_required()
 @validate_args(DeleteCategory)
-def deleteExpenseCategoryById(args):
+def deleteCategoryByName(args):
     if "name" in args:
         category = Category.find_by_name(args['name'])
         if category:

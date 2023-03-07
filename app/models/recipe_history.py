@@ -19,7 +19,9 @@ class RecipeHistory(db.Model, DbModelMixin, TimestampMixin):
     id = db.Column(db.Integer, primary_key=True)
 
     recipe_id = db.Column(db.Integer, db.ForeignKey('recipe.id'))
+    household_id = db.Column(db.Integer, db.ForeignKey('household.id'), nullable=False)
 
+    household = db.relationship("Household", uselist=False)
     recipe = db.relationship("Recipe", uselist=False,
                              back_populates="recipe_history")
 

@@ -21,7 +21,9 @@ class History(db.Model, DbModelMixin, TimestampMixin):
     shoppinglist_id = db.Column(db.Integer, db.ForeignKey(
         'shoppinglist.id'))
     item_id = db.Column(db.Integer, db.ForeignKey('item.id'))
+    household_id = db.Column(db.Integer, db.ForeignKey('household.id'), nullable=False)
 
+    household = db.relationship("Household", uselist=False)
     item = db.relationship("Item", uselist=False, back_populates="history")
 
     status = db.Column(db.Enum(Status))

@@ -11,7 +11,9 @@ class Category(db.Model, DbModelMixin, TimestampMixin):
     name = db.Column(db.String(128))
     default = db.Column(db.Boolean, default=False)
     ordering = db.Column(db.Integer, default=0)
+    household_id = db.Column(db.Integer, db.ForeignKey('household.id'), nullable=False)
 
+    household = db.relationship("Household", uselist=False)
     items = db.relationship(
         'Item', back_populates='category')
 

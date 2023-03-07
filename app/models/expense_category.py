@@ -10,7 +10,9 @@ class ExpenseCategory(db.Model, DbModelMixin, TimestampMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(128))
     color = db.Column(db.Integer)
+    household_id = db.Column(db.Integer, db.ForeignKey('household.id'), nullable=False)
 
+    household = db.relationship("Household", uselist=False)
     expenses = db.relationship(
         'Expense', back_populates='category')
 

@@ -13,7 +13,9 @@ class Item(db.Model, DbModelMixin, TimestampMixin):
     icon = db.Column(db.String(128), nullable=True)
     category_id = db.Column(db.Integer, db.ForeignKey('category.id'))
     default = db.Column(db.Boolean, default=False)
+    household_id = db.Column(db.Integer, db.ForeignKey('household.id'), nullable=False)
 
+    household = db.relationship("Household", uselist=False)
     category = db.relationship("Category")
 
     recipes = db.relationship(

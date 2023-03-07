@@ -9,7 +9,7 @@ from app.errors import NotFoundRequest
 from app.models.recipe import RecipeItems, RecipeTags
 from flask import jsonify, Blueprint
 from flask_jwt_extended import jwt_required
-from app.helpers import validate_args
+from app.helpers import authorizeFor, validate_args
 from app.models import Recipe, Item, Tag
 from recipe_scrapers import scrape_me
 from recipe_scrapers._exceptions import SchemaOrgException
@@ -25,7 +25,7 @@ def getAllRecipes():
     return jsonify([e.obj_to_full_dict() for e in Recipe.all_by_name()])
 
 
-@recipe.route('/<id>', methods=['GET'])
+@recipe.route('/<int:id>', methods=['GET'])
 @jwt_required()
 def getRecipeById(id):
     recipe = Recipe.find_by_id(id)
@@ -78,7 +78,7 @@ def addRecipe(args):
     return jsonify(recipe.obj_to_dict())
 
 
-@recipe.route('/<id>', methods=['POST'])
+@recipe.route('/<int:id>', methods=['POST'])
 @jwt_required()
 @validate_args(UpdateRecipe)
 def updateRecipe(args, id):  # noqa: C901
@@ -142,7 +142,7 @@ def updateRecipe(args, id):  # noqa: C901
     return jsonify(recipe.obj_to_dict())
 
 
-@recipe.route('/<id>', methods=['DELETE'])
+@recipe.route('/<int:id>', methods=['DELETE'])
 @jwt_required()
 def deleteRecipeById(id):
     Recipe.delete_by_id(id)
@@ -166,6 +166,7 @@ def getAllFiltered(args):
 
 
 @recipe.route('/scrape', methods=['GET', 'POST'])
+@jwt_required()
 @validate_args(ScrapeRecipe)
 def scrapeRecipe(args):
     scraper = scrape_me(args['url'], wild_mode=True)

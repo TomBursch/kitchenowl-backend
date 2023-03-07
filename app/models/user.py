@@ -12,13 +12,13 @@ class User(db.Model, DbModelMixin, TimestampMixin):
     username = db.Column(db.String(256), unique=True, nullable=False)
     password = db.Column(db.String(256), nullable=False)
     photo = db.Column(db.String())
-    owner = db.Column(db.Boolean(), default=False)
     admin = db.Column(db.Boolean(), default=False)
-
-    expense_balance = db.Column(db.Float(), default=0)
 
     tokens = db.relationship(
         'Token', back_populates='user', cascade="all, delete-orphan")
+
+    households = db.relationship(
+        'HouseholdMember', back_populates='user', cascade="all, delete-orphan")
 
     expenses_paid = db.relationship(
         'Expense', back_populates='paid_by', cascade="all, delete-orphan")
