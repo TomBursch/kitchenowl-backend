@@ -11,14 +11,14 @@ importBP = Blueprint('import', __name__)
 @importBP.route('', methods=['POST'])
 @jwt_required()
 @validate_args(ImportSchema)
-def importData(args):
+def importData(args, household_id):
     importFromDict(args)
     return jsonify({'msg': 'DONE'})
 
 
 @importBP.route('/<lang>', methods=['GET'])
 @jwt_required()
-def importLang(lang):
+def importLang(household_id, lang):
     importFromLanguage(lang)
     return jsonify({'msg': 'DONE'})
 

@@ -11,19 +11,20 @@ import app.util.description_merger as description_merger
 
 
 shoppinglist = Blueprint('shoppinglist', __name__)
+shoppinglistHousehold = Blueprint('shoppinglist', __name__)
 
 
-@shoppinglist.route('', methods=['POST'])
+@shoppinglistHousehold.route('', methods=['POST'])
 @jwt_required()
 @validate_args(CreateList)
-def createShoppinglist(args):
-    return jsonify(Shoppinglist(name=args['name']).save().obj_to_dict())
+def createShoppinglist(args, household_id):
+    return jsonify(Shoppinglist(name=args['name'], household_id=household_id).save().obj_to_dict())
 
 
-@shoppinglist.route('', methods=['GET'])
+@shoppinglistHousehold.route('', methods=['GET'])
 @jwt_required()
-def getShoppinglists():
-    shoppinglists = Shoppinglist.all()
+def getShoppinglists(household_id):
+    shoppinglists = Shoppinglist.all_from_household(household_id)
     return jsonify([e.obj_to_dict() for e in shoppinglists])
 
 
@@ -156,7 +157,7 @@ def addShoppinglistItemByName(args, id):
         raise NotFoundRequest()
     item = Item.find_by_name(args['name'])
     if not item:
-        item = Item.create_by_name(args['name'])
+        item = Item.create_by_name(shoppinglist.household_id, args['name'])
 
     con = ShoppinglistItems.find_by_ids(shoppinglist.id, item.id)
     if not con:

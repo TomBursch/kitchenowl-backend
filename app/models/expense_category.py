@@ -21,15 +21,15 @@ class ExpenseCategory(db.Model, DbModelMixin, TimestampMixin):
         return res
 
     @classmethod
-    def find_by_name(cls, name) -> Self:
-        return cls.query.filter(cls.name == name).first()
+    def find_by_name(cls, name: str, houshold_id: int) -> Self:
+        return cls.query.filter(cls.name == name, cls.household_id == houshold_id).first()
 
     @classmethod
     def find_by_id(cls, id) -> Self:
         return cls.query.filter(cls.id == id).first()
 
     @classmethod
-    def delete_by_name(cls, name):
-        mc = cls.find_by_name(name)
+    def delete_by_name(cls, name: str, household_id: int):
+        mc = cls.find_by_name(name, household_id)
         if mc:
             mc.delete()

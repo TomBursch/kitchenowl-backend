@@ -17,11 +17,13 @@ from werkzeug.utils import secure_filename
 from .schemas import SearchByNameRequest, AddRecipe, UpdateRecipe, GetAllFilterRequest, ScrapeRecipe
 
 recipe = Blueprint('recipe', __name__)
+recipeHousehold = Blueprint('recipe', __name__)
 
 
-@recipe.route('/', methods=['GET'])
+@recipe.route('', methods=['GET'])
+@recipeHousehold.route('', methods=['GET'])
 @jwt_required()
-def getAllRecipes():
+def getAllRecipes(household_id=None):
     return jsonify([e.obj_to_full_dict() for e in Recipe.all_by_name()])
 
 
@@ -149,19 +151,19 @@ def deleteRecipeById(id):
     return jsonify({'msg': 'DONE'})
 
 
-@recipe.route('/search', methods=['GET'])
+@recipeHousehold.route('/search', methods=['GET'])
 @jwt_required()
 @validate_args(SearchByNameRequest)
-def searchRecipeByName(args):
+def searchRecipeByName(args, household_id):
     if 'only_ids' in args and args['only_ids']:
         return jsonify([e.id for e in Recipe.search_name(args['query'])])
     return jsonify([e.obj_to_dict() for e in Recipe.search_name(args['query'])])
 
 
-@recipe.route('/filter', methods=['POST'])
+@recipeHousehold.route('/filter', methods=['POST'])
 @jwt_required()
 @validate_args(GetAllFilterRequest)
-def getAllFiltered(args):
+def getAllFiltered(args, household_id):
     return jsonify([e.obj_to_full_dict() for e in Recipe.all_by_name_with_filter(args["filter"])])
 
 

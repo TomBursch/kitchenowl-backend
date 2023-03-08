@@ -81,6 +81,22 @@ class DbModelMixin(object):
         IMPORTANT: requires name column
         """
         return cls.query.order_by(cls.name).all()
+    
+    @classmethod
+    def all_from_household(cls, household_id: int) -> list[Self]:
+        """
+        Return all instances of model
+        IMPORTANT: requires household_id column
+        """
+        return cls.query.filter(cls.household_id == household_id).order_by(cls.id).all()
+    
+    @classmethod
+    def all_from_household_by_name(cls, household_id: int) -> list[Self]:
+        """
+        Return all instances of model
+        IMPORTANT: requires household_id and name column
+        """
+        return cls.query.filter(cls.household_id == household_id).order_by(cls.name).all()
 
     @classmethod
     def count(cls) -> int:

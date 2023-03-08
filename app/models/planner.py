@@ -21,5 +21,5 @@ class Planner(db.Model, DbModelMixin, TimestampMixin):
         return res
 
     @classmethod
-    def find_by_day(cls, recipe_id: int, day: int) -> Self:
-        return cls.query.filter(cls.recipe_id == recipe_id, cls.day == day).first()
+    def find_by_day(cls, household_id:int, recipe_id: int, day: int) -> Self:
+        return cls.query.filter(cls.household_id == household_id, cls.recipe_id == recipe_id, cls.day == day).first()

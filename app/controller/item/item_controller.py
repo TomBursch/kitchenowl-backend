@@ -6,12 +6,12 @@ from app.models import Item, RecipeItems, Recipe, Category
 from .schemas import SearchByNameRequest, UpdateItem
 
 item = Blueprint('item', __name__)
+itemHousehold = Blueprint('item', __name__)
 
-
-@item.route('', methods=['GET'])
+@itemHousehold.route('', methods=['GET'])
 @jwt_required()
-def getAllItems():
-    return jsonify([e.obj_to_dict() for e in Item.all()])
+def getAllItems(household_id):
+    return jsonify([e.obj_to_dict() for e in Item.all_by_name_with_filter(household_id)])
 
 
 @item.route('/<int:id>', methods=['GET'])
@@ -40,11 +40,11 @@ def deleteItemById(id):
     return jsonify({'msg': 'DONE'})
 
 
-@item.route('/search', methods=['GET'])
+@itemHousehold.route('/search', methods=['GET'])
 @jwt_required()
 @validate_args(SearchByNameRequest)
-def searchItemByName(args):
-    return jsonify([e.obj_to_dict() for e in Item.search_name(args['query'])])
+def searchItemByName(args, household_id):
+    return jsonify([e.obj_to_dict() for e in Item.search_name(args['query'], household_id)])
 
 
 @item.route('/<int:id>', methods=['POST'])

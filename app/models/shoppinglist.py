@@ -15,11 +15,11 @@ class Shoppinglist(db.Model, DbModelMixin, TimestampMixin):
     items = db.relationship('ShoppinglistItems', cascade="all, delete-orphan")
 
     @classmethod
-    def getDefault(cls) -> Self:
-        return cls.find_by_id(1)
+    def getDefault(cls, household_id: int) -> Self:
+        return cls.query.filter(cls.household_id == household_id).order_by(cls.id).first()
 
-    def isDefault(self) -> bool:
-        return self.id == 1
+    def isDefault(self, household_id: int) -> bool:
+        return self.id == self.getDefault(household_id).id
 
 
 class ShoppinglistItems(db.Model, DbModelMixin, TimestampMixin):

@@ -16,7 +16,8 @@ class Household(db.Model, DbModelMixin, TimestampMixin):
 
     shoppinglists = db.relationship(
         'Shoppinglist', back_populates='household', cascade="all, delete-orphan")
-    member = db.relationship('HouseholdMember', back_populates='household', cascade="all, delete-orphan")
+    member = db.relationship(
+        'HouseholdMember', back_populates='household', cascade="all, delete-orphan")
 
 
 class HouseholdMember(db.Model, DbModelMixin, TimestampMixin):
@@ -37,3 +38,7 @@ class HouseholdMember(db.Model, DbModelMixin, TimestampMixin):
     @classmethod
     def find_by_ids(cls, household_id: int, user_id: int) -> Self:
         return cls.query.filter(cls.household_id == household_id, cls.user_id == user_id).first()
+
+    @classmethod
+    def find_by_household(cls, household_id: int) -> list[Self]:
+        return cls.query.filter(cls.household_id == household_id).all()

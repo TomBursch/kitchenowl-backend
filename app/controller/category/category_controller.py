@@ -6,12 +6,13 @@ from app.models import Category
 from .schemas import AddCategory, DeleteCategory, UpdateCategory
 
 category = Blueprint('category', __name__)
+categoryHousehold = Blueprint('category', __name__)
 
 
-@category.route('', methods=['GET'])
+@categoryHousehold.route('', methods=['GET'])
 @jwt_required()
-def getAllCategories():
-    return jsonify([e.obj_to_dict() for e in Category.all_by_ordering()])
+def getAllCategories(household_id):
+    return jsonify([e.obj_to_dict() for e in Category.all_by_ordering(household_id)])
 
 
 @category.route('/<int:id>', methods=['GET'])
@@ -23,12 +24,13 @@ def getCategory(id):
     return jsonify(category.obj_to_dict())
 
 
-@category.route('', methods=['POST'])
+@categoryHousehold.route('', methods=['POST'])
 @jwt_required()
 @validate_args(AddCategory)
-def addCategory(args):
+def addCategory(args, household_id):
     category = Category()
     category.name = args['name']
+    category.household_id = household_id
     category.save()
     return jsonify(category.obj_to_dict())
 
@@ -56,12 +58,12 @@ def deleteCategoryById(id):
     return jsonify({'msg': 'DONE'})
 
 
-@category.route('', methods=['DELETE'])
+@categoryHousehold.route('', methods=['DELETE'])
 @jwt_required()
 @validate_args(DeleteCategory)
-def deleteCategoryByName(args):
+def deleteCategoryByName(args, household_id):
     if "name" in args:
-        category = Category.find_by_name(args['name'])
+        category = Category.find_by_name(args['name'], household_id)
         if category:
             category.delete()
             return jsonify({'msg': 'DONE'})

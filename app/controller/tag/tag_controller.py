@@ -6,12 +6,13 @@ from app.models import Tag, RecipeTags, Recipe
 from .schemas import SearchByNameRequest, AddTag, UpdateTag
 
 tag = Blueprint('tag', __name__)
+tagHousehold = Blueprint('tag', __name__)
 
 
-@tag.route('', methods=['GET'])
+@tagHousehold.route('', methods=['GET'])
 @jwt_required()
-def getAllTags():
-    return jsonify([e.obj_to_dict() for e in Tag.all_by_name()])
+def getAllTags(household_id):
+    return jsonify([e.obj_to_dict() for e in Tag.all_from_household_by_name(household_id)])
 
 
 @tag.route('/<int:id>', methods=['GET'])
@@ -33,12 +34,13 @@ def getTagRecipes(id):
     return jsonify([e.recipe.obj_to_dict() for e in tags])
 
 
-@tag.route('', methods=['POST'])
+@tagHousehold.route('', methods=['POST'])
 @jwt_required()
 @validate_args(AddTag)
-def addTag(args):
+def addTag(args, household_id):
     tag = Tag()
     tag.name = args['name']
+    tag.household_id = household_id
     tag.save()
     return jsonify(tag.obj_to_dict())
 
@@ -63,10 +65,3 @@ def updateTag(args, id):
 def deleteTagById(id):
     Tag.delete_by_id(id)
     return jsonify({'msg': 'DONE'})
-
-
-@tag.route('/search', methods=['GET'])
-@jwt_required()
-@validate_args(SearchByNameRequest)
-def searchTagByName(args):
-    return jsonify([e.obj_to_dict() for e in Tag.search_name(args['query'])])

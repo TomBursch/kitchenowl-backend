@@ -13,7 +13,8 @@ class Item(db.Model, DbModelMixin, TimestampMixin):
     icon = db.Column(db.String(128), nullable=True)
     category_id = db.Column(db.Integer, db.ForeignKey('category.id'))
     default = db.Column(db.Boolean, default=False)
-    household_id = db.Column(db.Integer, db.ForeignKey('household.id'), nullable=False)
+    household_id = db.Column(db.Integer, db.ForeignKey(
+        'household.id'), nullable=False)
 
     household = db.relationship("Household", uselist=False)
     category = db.relationship("Category")
@@ -49,25 +50,19 @@ class Item(db.Model, DbModelMixin, TimestampMixin):
         if self.category:
             res["category"] = self.category.name
         return res
-    
+
     def save(self, keepDefault=False) -> Self:
         if not keepDefault:
             self.default = False
         super().save()
 
     @classmethod
-    def create_by_name(cls, name: str, default=False) -> Self:
+    def create_by_name(cls, household_id:int, name: str, default=False) -> Self:
         return cls(
             name=name.strip(),
             default=default,
+            household_id=household_id,
         ).save()
-
-    @classmethod
-    def allByName(cls) -> list[Self]:
-        """
-        Return all instances of Item ordered by name
-        """
-        return cls.query.order_by(cls.name).all()
 
     @classmethod
     def find_by_name(cls, name: str) -> Self:
@@ -79,14 +74,14 @@ class Item(db.Model, DbModelMixin, TimestampMixin):
         return cls.query.filter(cls.id == id).first()
 
     @classmethod
-    def search_name(cls, name: str) -> list[Self]:
+    def search_name(cls, name: str, household_id: int) -> list[Self]:
         item_count = 11
         found = []
 
         # name is a regex
         if '*' in name or '?' in name or '%' in name or '_' in name:
             looking_for = name.replace('*', '%').replace('?', '_')
-            found = cls.query.filter(cls.name.ilike(looking_for)).order_by(
+            found = cls.query.filter(cls.name.ilike(looking_for), cls.household_id == household_id).order_by(
                 cls.support.desc()).limit(item_count).all()
             return found
 
@@ -99,7 +94,7 @@ class Item(db.Model, DbModelMixin, TimestampMixin):
             one_error.append('%{0}%'.format(name_one_error))
 
         for looking_for in [starts_with, contains] + one_error:
-            res = cls.query.filter(cls.name.ilike(looking_for)).order_by(
+            res = cls.query.filter(cls.name.ilike(looking_for), cls.household_id == household_id).order_by(
                 cls.support.desc(), cls.name).all()
             for r in res:
                 if r not in found:
