@@ -170,14 +170,14 @@ def recalculateBalances(household_id):
 @expenseHousehold.route('/categories', methods=['GET'])
 @jwt_required()
 def getExpenseCategories(household_id):
-    return jsonify([e.obj_to_dict() for e in ExpenseCategory.all_by_name(household_id)])
+    return jsonify([e.obj_to_dict() for e in ExpenseCategory.all_from_household_by_name(household_id)])
 
 
 @expenseHousehold.route('/overview', methods=['GET'])
 @jwt_required()
 @validate_args(GetExpenseOverview)
 def getExpenseOverview(args, household_id):
-    categories = list(map(lambda x: x.id, ExpenseCategory.all_by_name(household_id)))
+    categories = list(map(lambda x: x.id, ExpenseCategory.all_from_household_by_name(household_id)))
     categories.append(-1)
     thisMonthStart = datetime.utcnow().date().replace(day=1)
 
