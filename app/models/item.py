@@ -9,7 +9,7 @@ class Item(db.Model, DbModelMixin, TimestampMixin):
     __tablename__ = 'item'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(128), unique=True)
+    name = db.Column(db.String(128))
     icon = db.Column(db.String(128), nullable=True)
     category_id = db.Column(db.Integer, db.ForeignKey('category.id'))
     default = db.Column(db.Boolean, default=False)

@@ -37,14 +37,15 @@ def addPlannedRecipe(args, household_id):
     planner = Planner.find_by_day(household_id, recipe_id=recipe.id, day=day)
     if not planner:
         if day >= 0:
-            old = Planner.find_by_day(household_id, recipe_id=recipe.id, day=-1)
+            old = Planner.find_by_day(
+                household_id, recipe_id=recipe.id, day=-1)
             if old:
                 old.delete()
         elif len(recipe.plans) > 0:
             return jsonify(recipe.obj_to_dict())
         planner = Planner()
         planner.recipe_id = recipe.id
-        planner.household_id = household_id,
+        planner.household_id = household_id
         planner.day = day
         if 'yields' in args:
             planner.yields = args['yields']
@@ -82,7 +83,7 @@ def getRecentRecipes(household_id):
 @jwt_required()
 def getSuggestedRecipes(household_id):
     # all suggestions
-    suggested_recipes = Recipe.find_suggestions()
+    suggested_recipes = Recipe.find_suggestions(household_id)
     # remove recipes on recent list
     recents = [e.recipe.id for e in RecipeHistory.get_recent(household_id)]
     suggested_recipes = [s for s in suggested_recipes if s.id not in recents]

@@ -24,7 +24,7 @@ recipeHousehold = Blueprint('recipe', __name__)
 @recipeHousehold.route('', methods=['GET'])
 @jwt_required()
 def getAllRecipes(household_id=None):
-    return jsonify([e.obj_to_full_dict() for e in Recipe.all_by_name()])
+    return jsonify([e.obj_to_full_dict() for e in Recipe.all_from_household_by_name(household_id)])
 
 
 @recipe.route('/<int:id>', methods=['GET'])
@@ -157,14 +157,14 @@ def deleteRecipeById(id):
 def searchRecipeByName(args, household_id):
     if 'only_ids' in args and args['only_ids']:
         return jsonify([e.id for e in Recipe.search_name(args['query'])])
-    return jsonify([e.obj_to_dict() for e in Recipe.search_name(args['query'])])
+    return jsonify([e.obj_to_dict() for e in Recipe.search_name(household_id, args['query'])])
 
 
 @recipeHousehold.route('/filter', methods=['POST'])
 @jwt_required()
 @validate_args(GetAllFilterRequest)
 def getAllFiltered(args, household_id):
-    return jsonify([e.obj_to_full_dict() for e in Recipe.all_by_name_with_filter(args["filter"])])
+    return jsonify([e.obj_to_full_dict() for e in Recipe.all_by_name_with_filter(household_id, args["filter"])])
 
 
 @recipe.route('/scrape', methods=['GET', 'POST'])

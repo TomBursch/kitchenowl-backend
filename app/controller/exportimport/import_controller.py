@@ -3,7 +3,6 @@ from .schemas import ImportSchema
 from app.helpers import validate_args, authorizeFor
 from flask import jsonify, Blueprint
 from flask_jwt_extended import jwt_required
-from app.config import SUPPORTED_LANGUAGES
 
 importBP = Blueprint('import', __name__)
 
@@ -21,8 +20,3 @@ def importData(args, household_id):
 def importLang(household_id, lang):
     importFromLanguage(lang)
     return jsonify({'msg': 'DONE'})
-
-
-@importBP.route('/supported-languages', methods=['GET'])
-def getSupportedLanguages():
-    return jsonify(SUPPORTED_LANGUAGES)

@@ -8,6 +8,11 @@ class AddHousehold(Schema):
         required=True,
         validate=lambda a: a and not a.isspace()
     )
+    photo = fields.String()
+    language = fields.String()
+    planner_feature = fields.Boolean()
+    expenses_feature = fields.Boolean()
+    view_ordering = fields.List(fields.String)
 
 
 class UpdateHousehold(Schema):
@@ -16,3 +21,8 @@ class UpdateHousehold(Schema):
     name = fields.String(
         validate=lambda a: a and not a.isspace()
     )
+    photo = fields.String()
+    language = fields.String()
+    planner_feature = fields.Boolean()
+    expenses_feature = fields.Boolean()
+    view_ordering = fields.List(fields.String)
