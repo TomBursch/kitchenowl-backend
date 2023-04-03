@@ -20,7 +20,7 @@ class Household(db.Model, DbModelMixin, TimestampMixin):
         'Shoppinglist', back_populates='household', cascade="all, delete-orphan")
     member = db.relationship(
         'HouseholdMember', back_populates='household', cascade="all, delete-orphan")
-    
+
     def obj_to_dict(self) -> dict:
         res = super().obj_to_dict()
         res['member'] = [m.obj_to_user_dict() for m in getattr(self, 'member')]
@@ -56,7 +56,7 @@ class HouseholdMember(db.Model, DbModelMixin, TimestampMixin):
     @classmethod
     def find_by_household(cls, household_id: int) -> list[Self]:
         return cls.query.filter(cls.household_id == household_id).all()
-    
+
     @classmethod
     def find_by_user(cls, user_id: int) -> list[Self]:
         return cls.query.filter(cls.user_id == user_id).all()

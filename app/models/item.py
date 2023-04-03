@@ -57,7 +57,7 @@ class Item(db.Model, DbModelMixin, TimestampMixin):
         super().save()
 
     @classmethod
-    def create_by_name(cls, household_id:int, name: str, default=False) -> Self:
+    def create_by_name(cls, household_id: int, name: str, default=False) -> Self:
         return cls(
             name=name.strip(),
             default=default,
@@ -65,9 +65,9 @@ class Item(db.Model, DbModelMixin, TimestampMixin):
         ).save()
 
     @classmethod
-    def find_by_name(cls, name: str) -> Self:
+    def find_by_name(cls, household_id: int, name: str) -> Self:
         name = name.strip()
-        return cls.query.filter(cls.name == name).first()
+        return cls.query.filter(cls.household_id == household_id, cls.name == name).first()
 
     @classmethod
     def find_by_id(cls, id) -> Self:

@@ -155,7 +155,7 @@ def addShoppinglistItemByName(args, id):
     shoppinglist = Shoppinglist.find_by_id(id)
     if not shoppinglist:
         raise NotFoundRequest()
-    item = Item.find_by_name(args['name'])
+    item = Item.find_by_name(shoppinglist.household_id, args['name'])
     if not item:
         item = Item.create_by_name(shoppinglist.household_id, args['name'])
 

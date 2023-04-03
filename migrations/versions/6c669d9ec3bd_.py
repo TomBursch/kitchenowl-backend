@@ -36,11 +36,6 @@ class ExpenseCategory(DeclarativeBase):
     id = sa.Column(sa.Integer, primary_key=True)
     household_id = sa.Column(sa.Integer, sa.ForeignKey('household.id'), nullable=True)
 
-class History(DeclarativeBase):
-    __tablename__ = 'history'
-    id = sa.Column(sa.Integer, primary_key=True)
-    household_id = sa.Column(sa.Integer, sa.ForeignKey('household.id'), nullable=True)
-
 class Item(DeclarativeBase):
     __tablename__ = 'item'
     id = sa.Column(sa.Integer, primary_key=True)
@@ -153,10 +148,6 @@ def upgrade():
         batch_op.add_column(sa.Column('household_id', sa.Integer(), nullable=True))
         batch_op.create_foreign_key(batch_op.f('fk_expense_category_household_id_household'), 'household', ['household_id'], ['id'])
 
-    with op.batch_alter_table('history', schema=None) as batch_op:
-        batch_op.add_column(sa.Column('household_id', sa.Integer(), nullable=True))
-        batch_op.create_foreign_key(batch_op.f('fk_history_household_id_household'), 'household', ['household_id'], ['id'])
-
     with op.batch_alter_table('item', schema=None) as batch_op:
         batch_op.add_column(sa.Column('household_id', sa.Integer(), nullable=True))
         batch_op.create_foreign_key(batch_op.f('fk_item_household_id_household'), 'household', ['household_id'], ['id'])
@@ -191,7 +182,6 @@ def upgrade():
         models: list[db.Model] = session.query(Category).all()\
             + session.query(Expense).all()\
             + session.query(ExpenseCategory).all()\
-            + session.query(History).all()\
             + session.query(Item).all()\
             + session.query(Recipe).all()\
             + session.query(RecipeHistory).all()\
@@ -243,9 +233,6 @@ def upgrade():
         batch_op.alter_column('household_id', nullable=False)
 
     with op.batch_alter_table('expense_category', schema=None) as batch_op:
-        batch_op.alter_column('household_id', nullable=False)
-
-    with op.batch_alter_table('history', schema=None) as batch_op:
         batch_op.alter_column('household_id', nullable=False)
 
     with op.batch_alter_table('item', schema=None) as batch_op:
@@ -311,10 +298,6 @@ def downgrade():
         batch_op.drop_constraint(batch_op.f('fk_item_household_id_household'), type_='foreignkey')
         batch_op.drop_column('household_id')
         batch_op.create_unique_constraint('uq_item_name', ['name'])
-
-    with op.batch_alter_table('history', schema=None) as batch_op:
-        batch_op.drop_constraint(batch_op.f('fk_history_household_id_household'), type_='foreignkey')
-        batch_op.drop_column('household_id')
 
     with op.batch_alter_table('expense_category', schema=None) as batch_op:
         batch_op.drop_constraint(batch_op.f('fk_expense_category_household_id_household'), type_='foreignkey')

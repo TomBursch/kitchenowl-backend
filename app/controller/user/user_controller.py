@@ -4,7 +4,7 @@ from app.helpers import validate_args
 from flask import jsonify, Blueprint
 from flask_jwt_extended import current_user, jwt_required, get_jwt_identity
 from app.models import User
-from .schemas import CreateUser, UpdateUser
+from .schemas import CreateUser, UpdateUser, SearchByNameRequest
 
 
 user = Blueprint('user', __name__)
@@ -72,6 +72,8 @@ def updateUserById(args, id):
         user.name = args['name']
     if 'password' in args:
         user.set_password(args['password'])
+    if 'photo' in args:
+        user.photo = args['photo']
     if 'admin' in args:
         user.admin = args['admin'] or user.owner
     user.save()
@@ -85,3 +87,10 @@ def updateUserById(args, id):
 def createUser(args):
     User.create(args['username'].lower(), args['password'], args['name'])
     return jsonify({'msg': 'DONE'})
+
+
+@user.route('/search', methods=['GET'])
+@jwt_required()
+@validate_args(SearchByNameRequest)
+def searchUser(args):
+    return jsonify([e.obj_to_dict() for e in User.search_name(args['query'])])

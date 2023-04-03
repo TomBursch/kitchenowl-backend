@@ -3,7 +3,7 @@ from flask import jsonify, Blueprint
 from app.errors import NotFoundRequest
 from flask_jwt_extended import current_user, jwt_required
 from app.models import Household, HouseholdMember, Shoppinglist
-from .schemas import AddHousehold, UpdateHousehold
+from .schemas import AddHousehold, UpdateHousehold, UpdateHouseholdMember
 
 household = Blueprint('household', __name__)
 
@@ -81,4 +81,34 @@ def updateHousehold(args, household_id):
 @jwt_required()
 def deleteHouseholdById(household_id):
     Household.delete_by_id(household_id)
+    return jsonify({'msg': 'DONE'})
+
+
+@household.route('/<int:household_id>/member/<int:user_id>', methods=['PUT'])
+@jwt_required()
+@validate_args(UpdateHouseholdMember)
+def putHouseholdMember(args, household_id, user_id):
+    hm = HouseholdMember.find_by_ids(household_id, user_id)
+    if not hm:
+        household = Household.find_by_id(household_id)
+        if not household:
+            raise NotFoundRequest()
+        hm = HouseholdMember()
+        hm.household_id = household_id
+        hm.user_id = user_id
+
+    if "admin" in args:
+        hm.admin = args["admin"]
+
+    hm.save()
+
+    return jsonify(hm.obj_to_user_dict())
+
+
+@household.route('/<int:household_id>member/<int:user_id>', methods=['DELETE'])
+@jwt_required()
+def deleteHouseholdMember(household_id, user_id):
+    hm = HouseholdMember.find_by_ids(household_id, user_id)
+    if hm:
+        hm.delete()
     return jsonify({'msg': 'DONE'})
