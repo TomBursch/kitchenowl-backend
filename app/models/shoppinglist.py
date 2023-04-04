@@ -7,7 +7,7 @@ class Shoppinglist(db.Model, DbModelMixin, TimestampMixin):
     __tablename__ = 'shoppinglist'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(128), unique=True)
+    name = db.Column(db.String(128))
 
     household_id = db.Column(db.Integer, db.ForeignKey('household.id'), nullable=False)
 

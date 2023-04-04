@@ -28,7 +28,7 @@ def getShoppinglists(household_id):
     return jsonify([e.obj_to_dict() for e in shoppinglists])
 
 
-@shoppinglist.route('/<id>', methods=['POST'])
+@shoppinglist.route('/<int:id>', methods=['POST'])
 @jwt_required()
 @validate_args(UpdateList)
 def updateShoppinglist(args, id):

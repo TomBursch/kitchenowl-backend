@@ -168,6 +168,7 @@ def upgrade():
     with op.batch_alter_table('shoppinglist', schema=None) as batch_op:
         batch_op.add_column(sa.Column('household_id', sa.Integer(), nullable=True))
         batch_op.create_foreign_key(batch_op.f('fk_shoppinglist_household_id_household'), 'household', ['household_id'], ['id'])
+        batch_op.drop_constraint('uq_shoppinglist_name', type_='unique')
 
     with op.batch_alter_table('tag', schema=None) as batch_op:
         batch_op.add_column(sa.Column('household_id', sa.Integer(), nullable=True))
@@ -191,7 +192,6 @@ def upgrade():
         for model in models:
             model.household_id = 1
 
-        settings.id = 1
         household = Household()
         household.id = 1
         household.name = "Home"
@@ -279,6 +279,7 @@ def downgrade():
     with op.batch_alter_table('shoppinglist', schema=None) as batch_op:
         batch_op.drop_constraint(batch_op.f('fk_shoppinglist_household_id_household'), type_='foreignkey')
         batch_op.drop_column('household_id')
+        batch_op.create_unique_constraint(batch_op.f('uq_shoppinglist_name'), ['name'])
 
     with op.batch_alter_table('settings', schema=None) as batch_op:
         batch_op.add_column(sa.Column('planner_feature', sa.BOOLEAN(), nullable=False))
@@ -297,7 +298,7 @@ def downgrade():
     with op.batch_alter_table('item', schema=None) as batch_op:
         batch_op.drop_constraint(batch_op.f('fk_item_household_id_household'), type_='foreignkey')
         batch_op.drop_column('household_id')
-        batch_op.create_unique_constraint('uq_item_name', ['name'])
+        batch_op.create_unique_constraint(batch_op.f('uq_item_name'), ['name'])
 
     with op.batch_alter_table('expense_category', schema=None) as batch_op:
         batch_op.drop_constraint(batch_op.f('fk_expense_category_household_id_household'), type_='foreignkey')

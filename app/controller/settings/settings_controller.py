@@ -10,15 +10,8 @@ settings = Blueprint('settings', __name__)
 @settings.route('', methods=['POST'])
 @jwt_required()
 @admin_required
-@validate_args(SetSettingsSchema)
-def setSettings(args):
+def setSettings():
     settings = Settings.get()
-    if 'planner_feature' in args:
-        settings.planner_feature = args['planner_feature']
-    if 'expenses_feature' in args:
-        settings.expenses_feature = args['expenses_feature']
-    if 'view_ordering' in args:
-        settings.view_ordering = args['view_ordering']
     settings.save()
     return jsonify(settings.obj_to_dict())
 

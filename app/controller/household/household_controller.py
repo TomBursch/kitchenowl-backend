@@ -1,8 +1,10 @@
+from app.config import SUPPORTED_LANGUAGES
 from app.helpers import validate_args, authorizeFor
 from flask import jsonify, Blueprint
 from app.errors import NotFoundRequest
 from flask_jwt_extended import current_user, jwt_required
 from app.models import Household, HouseholdMember, Shoppinglist
+from app.service.export_import import importLanguage
 from .schemas import AddHousehold, UpdateHousehold, UpdateHouseholdMember
 
 household = Blueprint('household', __name__)
@@ -31,7 +33,7 @@ def addHousehold(args):
     household.name = args['name']
     if 'photo' in args:
         household.photo = args['photo']
-    if 'language' in args:
+    if 'language' in args and args['language'] in SUPPORTED_LANGUAGES:
         household.language = args['language']
     if 'planner_feature' in args:
         household.planner_feature = args['planner_feature']
@@ -49,6 +51,9 @@ def addHousehold(args):
 
     Shoppinglist(name="Default", household_id=household.id).save()
 
+    if household.language:
+        importLanguage(household.id, household.language, True)
+
     return jsonify(household.obj_to_dict())
 
 
@@ -64,8 +69,9 @@ def updateHousehold(args, household_id):
         household.name = args['name']
     if 'photo' in args:
         household.photo = args['photo']
-    if 'language' in args and not household.language:
+    if 'language' in args and not household.language and args['language'] in SUPPORTED_LANGUAGES:
         household.language = args['language']
+        importLanguage(household.id, household.language)
     if 'planner_feature' in args:
         household.planner_feature = args['planner_feature']
     if 'expenses_feature' in args:

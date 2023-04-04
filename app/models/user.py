@@ -53,12 +53,12 @@ class User(db.Model, DbModelMixin, TimestampMixin):
         return cls.query.filter(cls.username == username).first()
 
     @classmethod
-    def create(cls, username: str, password: str, name: str, owner=False) -> Self:
+    def create(cls, username: str, password: str, name: str, admin=False) -> Self:
         return cls(
             username=username,
             password=bcrypt.generate_password_hash(password).decode('utf-8'),
             name=name,
-            owner=owner
+            admin=admin
         ).save()
 
     @classmethod

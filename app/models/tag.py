@@ -20,14 +20,15 @@ class Tag(db.Model, DbModelMixin, TimestampMixin):
         return res
 
     @classmethod
-    def create_by_name(cls, name: str) -> Self:
+    def create_by_name(cls, household_id: int, name: str) -> Self:
         return cls(
             name=name,
+            household_id=household_id,
         ).save()
 
     @classmethod
-    def find_by_name(cls, name: str) -> Self:
-        return cls.query.filter(cls.name == name).first()
+    def find_by_name(cls, household_id: int, name: str) -> Self:
+        return cls.query.filter(cls.household_id == household_id, cls.name == name).first()
 
     @classmethod
     def find_by_id(cls, id: int) -> Self:

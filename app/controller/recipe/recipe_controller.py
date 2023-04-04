@@ -36,13 +36,14 @@ def getRecipeById(id):
     return jsonify(recipe.obj_to_full_dict())
 
 
-@recipe.route('', methods=['POST'])
+@recipeHousehold.route('', methods=['POST'])
 @jwt_required()
 @validate_args(AddRecipe)
-def addRecipe(args):
+def addRecipe(args, household_id):
     recipe = Recipe()
     recipe.name = args['name']
     recipe.description = args['description']
+    recipe.household_id = household_id
     if 'time' in args:
         recipe.time = args['time']
     if 'cook_time' in args:
@@ -58,9 +59,9 @@ def addRecipe(args):
     recipe.save()
     if 'items' in args:
         for recipeItem in args['items']:
-            item = Item.find_by_name(recipeItem['name'])
+            item = Item.find_by_name(household_id, recipeItem['name'])
             if not item:
-                item = Item.create_by_name(recipeItem['name'])
+                item = Item.create_by_name(household_id, recipeItem['name'])
             con = RecipeItems(
                 description=recipeItem['description'],
                 optional=recipeItem['optional']
@@ -70,9 +71,9 @@ def addRecipe(args):
             con.save()
     if 'tags' in args:
         for tagName in args['tags']:
-            tag = Tag.find_by_name(tagName)
+            tag = Tag.find_by_name(household_id, tagName)
             if not tag:
-                tag = Tag.create_by_name(tagName)
+                tag = Tag.create_by_name(household_id, tagName)
             con = RecipeTags()
             con.tag = tag
             con.recipe = recipe
@@ -110,9 +111,9 @@ def updateRecipe(args, id):  # noqa: C901
             if con.item.name not in item_names:
                 con.delete()
         for recipeItem in args['items']:
-            item = Item.find_by_name(recipeItem['name'])
+            item = Item.find_by_name(recipe.household_id, recipeItem['name'])
             if not item:
-                item = Item.create_by_name(recipeItem['name'])
+                item = Item.create_by_name(recipe.household_id, recipeItem['name'])
             con = RecipeItems.find_by_ids(recipe.id, item.id)
             if con:
                 if 'description' in recipeItem:
@@ -132,9 +133,9 @@ def updateRecipe(args, id):  # noqa: C901
             if con.tag.name not in args['tags']:
                 con.delete()
         for recipeTag in args['tags']:
-            tag = Tag.find_by_name(recipeTag)
+            tag = Tag.find_by_name(recipe.household_id, recipeTag)
             if not tag:
-                tag = Tag.create_by_name(recipeTag)
+                tag = Tag.create_by_name(recipe.household_id, recipeTag)
             con = RecipeTags.find_by_ids(recipe.id, tag.id)
             if not con:
                 con = RecipeTags()

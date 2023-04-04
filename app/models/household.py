@@ -24,6 +24,7 @@ class Household(db.Model, DbModelMixin, TimestampMixin):
     def obj_to_dict(self) -> dict:
         res = super().obj_to_dict()
         res['member'] = [m.obj_to_user_dict() for m in getattr(self, 'member')]
+        res['default_shopping_list'] = self.shoppinglists[0].obj_to_dict()
         return res
 
 

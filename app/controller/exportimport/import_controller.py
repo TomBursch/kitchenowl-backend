@@ -1,4 +1,4 @@
-from app.service.export_import import importFromDict, importFromLanguage
+from app.service.export_import import importFromDict
 from .schemas import ImportSchema
 from app.helpers import validate_args, authorizeFor
 from flask import jsonify, Blueprint
@@ -12,11 +12,4 @@ importBP = Blueprint('import', __name__)
 @validate_args(ImportSchema)
 def importData(args, household_id):
     importFromDict(args)
-    return jsonify({'msg': 'DONE'})
-
-
-@importBP.route('/<lang>', methods=['GET'])
-@jwt_required()
-def importLang(household_id, lang):
-    importFromLanguage(lang)
     return jsonify({'msg': 'DONE'})

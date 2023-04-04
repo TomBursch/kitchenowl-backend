@@ -47,13 +47,13 @@ def getExpenseById(id):
 @jwt_required()
 @validate_args(AddExpense)
 def addExpense(args, household_id):
-    user = User.find_by_id(args['paid_by']['id'])
-    if not user:
+    member = HouseholdMember.find_by_ids(household_id, args['paid_by']['id'])
+    if not member:
         raise NotFoundRequest()
     expense = Expense()
     expense.name = args['name']
     expense.amount = args['amount']
-    expense.household_id == household_id
+    expense.household_id = household_id
     if 'date' in args:
         expense.date = datetime.fromtimestamp(
             args['date']/1000, timezone.utc)
@@ -63,26 +63,26 @@ def addExpense(args, household_id):
         if args['category'] is not None:
             category = ExpenseCategory.find_by_id(args['category'])
             expense.category = category
-    expense.paid_by = user
+    expense.paid_by_id = member.user_id
     expense.save()
-    user.expense_balance = (user.expense_balance or 0) + expense.amount
-    user.save()
+    member.expense_balance = (member.expense_balance or 0) + expense.amount
+    member.save()
     factor_sum = 0
     for user_data in args['paid_for']:
-        if User.find_by_id(user_data['id']):
+        if HouseholdMember.find_by_ids(household_id, user_data['id']):
             factor_sum += user_data['factor']
     for user_data in args['paid_for']:
-        user_for = User.find_by_id(user_data['id'])
-        if user_for:
+        member_for = HouseholdMember.find_by_ids(household_id, user_data['id'])
+        if member_for:
             con = ExpensePaidFor(
                 factor=user_data['factor'],
             )
-            con.user = user_for
+            con.user_id = member_for.user_id
             con.expense = expense
             con.save()
-            user_for.expense_balance = (
-                user_for.expense_balance or 0) - (con.factor / factor_sum) * expense.amount
-            user_for.save()
+            member_for.expense_balance = (
+                member_for.expense_balance or 0) - (con.factor / factor_sum) * expense.amount
+            member_for.save()
     return jsonify(expense.obj_to_dict())
 
 
@@ -109,9 +109,10 @@ def updateExpense(args, id):  # noqa: C901
         else:
             expense.category = None
     if 'paid_by' in args:
-        user = User.find_by_id(args['paid_by']['id'])
-        if user:
-            expense.paid_by = user
+        member = HouseholdMember.find_by_ids(
+            expense.household_id, args['paid_by']['id'])
+        if member:
+            expense.paid_by_id = member.user_id
     expense.save()
     if 'paid_for' in args:
         for con in expense.paid_for:
@@ -119,9 +120,10 @@ def updateExpense(args, id):  # noqa: C901
             if con.user.id not in user_ids:
                 con.delete()
         for user_data in args['paid_for']:
-            user = User.find_by_id(user_data['id'])
-            if user:
-                con = ExpensePaidFor.find_by_ids(expense.id, user.id)
+            member = HouseholdMember.find_by_ids(
+                expense.household_id, user_data['id'])
+            if member:
+                con = ExpensePaidFor.find_by_ids(expense.id, member.user_id)
                 if con:
                     if 'factor' in user_data and user_data['factor']:
                         con.factor = user_data['factor']
@@ -130,7 +132,7 @@ def updateExpense(args, id):  # noqa: C901
                         factor=user_data['factor'],
                     )
                     con.expense = expense
-                    con.user = user
+                    con.user_id = member.user_id
                 con.save()
     recalculateBalances(expense.household_id)
     return jsonify(expense.obj_to_dict())
@@ -157,13 +159,14 @@ def calculateBalances(household_id):
 def recalculateBalances(household_id):
     for member in HouseholdMember.find_by_household(household_id):
         member.expense_balance = float(Expense.query.with_entities(func.sum(
-            Expense.amount).label("balance")).filter(Expense.paid_by_id == member.user_id, ExpensePaidFor.expense.household_id == household_id).first().balance or 0)
-        for expense in ExpensePaidFor.query.filter(ExpensePaidFor.user_id == member.user_id, ExpensePaidFor.expense.household_id == household_id).all():
+            Expense.amount).label("balance")).filter(Expense.paid_by_id == member.user_id, Expense.household_id == household_id).first().balance or 0)
+        for paid_for in ExpensePaidFor.query.filter(ExpensePaidFor.user_id == member.user_id, ExpensePaidFor.expense_id.in_(db.session.query(Expense.id).filter(
+                Expense.household_id == household_id).scalar_subquery())).all():
             factor_sum = Expense.query.with_entities(func.sum(
                 ExpensePaidFor.factor).label("factor_sum"))\
-                .filter(ExpensePaidFor.expense_id == expense.expense_id).first().factor_sum
+                .filter(ExpensePaidFor.expense_id == paid_for.expense_id).first().factor_sum
             member.expense_balance = member.expense_balance - \
-                (expense.factor / factor_sum) * expense.expense.amount
+                (paid_for.factor / factor_sum) * paid_for.expense.amount
         member.save()
 
 
@@ -177,7 +180,8 @@ def getExpenseCategories(household_id):
 @jwt_required()
 @validate_args(GetExpenseOverview)
 def getExpenseOverview(args, household_id):
-    categories = list(map(lambda x: x.id, ExpenseCategory.all_from_household_by_name(household_id)))
+    categories = list(
+        map(lambda x: x.id, ExpenseCategory.all_from_household_by_name(household_id)))
     categories.append(-1)
     thisMonthStart = datetime.utcnow().date().replace(day=1)
 
@@ -230,7 +234,7 @@ def addExpenseCategory(args, household_id):
     category = ExpenseCategory()
     category.name = args['name']
     category.color = args['color']
-    category.household_id == household_id
+    category.household_id = household_id
     category.save()
     return jsonify(category.obj_to_dict())
 
