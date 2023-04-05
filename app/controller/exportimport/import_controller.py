@@ -12,5 +12,5 @@ importBP = Blueprint('import', __name__)
 @authorize_household()
 @validate_args(ImportSchema)
 def importData(args, household_id):
-    importFromDict(args)
+    importFromDict(household_id, args)
     return jsonify({'msg': 'DONE'})
