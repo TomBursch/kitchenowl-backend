@@ -1,5 +1,5 @@
 from flask_jwt_extended import current_user
-from app.errors import UnauthorizedRequest
+from app.errors import UnauthorizedRequest, ForbiddenRequest
 import app
 
 
@@ -16,5 +16,5 @@ class DbModelAuthorizeMixin(object):
         member = app.models.household.HouseholdMember.find_by_ids(
             self.household_id, current_user.id)
         if not current_user.admin:
-            if not member or requires_admin and not member.admin:
-                raise UnauthorizedRequest()
+            if not member or requires_admin and not (member.admin or member.owner):
+                raise ForbiddenRequest()

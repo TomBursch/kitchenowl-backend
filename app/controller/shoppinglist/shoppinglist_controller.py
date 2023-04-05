@@ -5,7 +5,7 @@ from app.models import Item, Shoppinglist, History, Status, Association, Shoppin
 from app.helpers import validate_args, authorize_household
 from .schemas import (RemoveItem, UpdateDescription,
                       AddItemByName, CreateList, AddRecipeItems, GetItems, UpdateList)
-from app.errors import NotFoundRequest, ForbiddenRequest
+from app.errors import NotFoundRequest, InvalidUsage
 from datetime import datetime, timedelta, timezone
 import app.util.description_merger as description_merger
 
@@ -54,7 +54,7 @@ def deleteShoppinglist(id):
         raise NotFoundRequest()
     shoppinglist.checkAuthorized()
     if shoppinglist.isDefault():
-        raise ForbiddenRequest()
+        raise InvalidUsage()
     shoppinglist.delete()
 
     return jsonify({'msg': 'DONE'})

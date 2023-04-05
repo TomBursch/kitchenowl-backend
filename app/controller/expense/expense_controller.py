@@ -7,7 +7,7 @@ from flask import jsonify, Blueprint
 from flask_jwt_extended import current_user, jwt_required
 from sqlalchemy import func
 from app import db
-from app.helpers import validate_args, server_admin_required, authorize_household
+from app.helpers import validate_args, authorize_household, RequiredRights
 from app.models import Expense, ExpensePaidFor, ExpenseCategory, HouseholdMember
 from .schemas import GetExpenses, AddExpense, UpdateExpense, AddExpenseCategory, UpdateExpenseCategory, GetExpenseOverview
 
@@ -158,7 +158,7 @@ def deleteExpenseById(id):
 
 @expenseHousehold.route('/recalculate-balances')
 @jwt_required()
-@authorize_household(requires_admin=True)
+@authorize_household(required=RequiredRights.ADMIN)
 def calculateBalances(household_id):
     recalculateBalances(household_id)
 

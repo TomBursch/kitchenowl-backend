@@ -42,15 +42,14 @@ def deleteUser():
     current_user.delete()
     return jsonify({'msg': 'DONE'})
 
+
 @user.route('/<int:id>', methods=['DELETE'])
 @jwt_required()
 @server_admin_required()
 def deleteUserById(id):
     user = User.find_by_id(id)
     if not user:
-        raise UnauthorizedRequest(
-            message='Cannot delete this user'
-        )
+        raise NotFoundRequest()
     user.delete()
     return jsonify({'msg': 'DONE'})
 
@@ -59,7 +58,7 @@ def deleteUserById(id):
 @jwt_required()
 @validate_args(UpdateUser)
 def updateUser(args):
-    user = current_user;
+    user = current_user
     if not user:
         raise NotFoundRequest()
     if 'name' in args:

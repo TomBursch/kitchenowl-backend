@@ -14,6 +14,9 @@ class Shoppinglist(db.Model, DbModelMixin, TimestampMixin, DbModelAuthorizeMixin
     household = db.relationship("Household", uselist=False)
     items = db.relationship('ShoppinglistItems', cascade="all, delete-orphan")
 
+    history = db.relationship(
+        "History", back_populates="shoppinglist", cascade="all, delete-orphan")
+
     @classmethod
     def getDefault(cls, household_id: int) -> Self:
         return cls.query.filter(cls.household_id == household_id).order_by(cls.id).first()

@@ -32,9 +32,9 @@ class Item(db.Model, DbModelMixin, TimestampMixin, DbModelAuthorizeMixin):
     history = db.relationship(
         "History", back_populates="item", cascade="all, delete-orphan")
     antecedents = db.relationship(
-        "Association", back_populates="antecedent", foreign_keys='Association.antecedent_id')
+        "Association", back_populates="antecedent", foreign_keys='Association.antecedent_id', cascade="all, delete-orphan")
     consequents = db.relationship(
-        "Association", back_populates="consequent", foreign_keys='Association.consequent_id')
+        "Association", back_populates="consequent", foreign_keys='Association.consequent_id', cascade="all, delete-orphan")
 
     def obj_to_dict(self) -> dict:
         res = super().obj_to_dict()

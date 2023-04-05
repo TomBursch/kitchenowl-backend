@@ -19,7 +19,8 @@ class RecipeHistory(db.Model, DbModelMixin, TimestampMixin):
     id = db.Column(db.Integer, primary_key=True)
 
     recipe_id = db.Column(db.Integer, db.ForeignKey('recipe.id'))
-    household_id = db.Column(db.Integer, db.ForeignKey('household.id'), nullable=False)
+    household_id = db.Column(db.Integer, db.ForeignKey(
+        'household.id'), nullable=False)
 
     household = db.relationship("Household", uselist=False)
     recipe = db.relationship("Recipe", uselist=False,
@@ -62,7 +63,8 @@ class RecipeHistory(db.Model, DbModelMixin, TimestampMixin):
 
     @classmethod
     def get_recent(cls, household_id: int) -> list[Self]:
-        sq = db.session.query(Planner.recipe_id).group_by(Planner.recipe_id).filter(Planner.household_id == household_id).subquery().select()
+        sq = db.session.query(Planner.recipe_id).group_by(Planner.recipe_id).filter(
+            Planner.household_id == household_id).subquery().select()
         sq2 = db.session.query(func.max(cls.id)).filter(cls.status == Status.DROPPED, cls.household_id == household_id).filter(
             cls.recipe_id.notin_(sq)).group_by(cls.recipe_id).join(cls.recipe).subquery().select()
         return cls.query.filter(cls.id.in_(sq2)).order_by(cls.id.desc()).limit(9)

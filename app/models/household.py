@@ -16,6 +16,20 @@ class Household(db.Model, DbModelMixin, TimestampMixin):
 
     view_ordering = db.Column(DbListType(), default=list())
 
+    items = db.relationship(
+        'Item', back_populates='household', cascade="all, delete-orphan")
+    shoppinglists = db.relationship(
+        'Shoppinglist', back_populates='household', cascade="all, delete-orphan")
+    categories = db.relationship(
+        'Category', back_populates='household', cascade="all, delete-orphan")
+    recipes = db.relationship(
+        'Recipe', back_populates='household', cascade="all, delete-orphan")
+    tags = db.relationship(
+        'Tag', back_populates='household', cascade="all, delete-orphan")
+    expenses = db.relationship(
+        'Expense', back_populates='household', cascade="all, delete-orphan")
+    expenseCategories = db.relationship(
+        'ExpenseCategory', back_populates='household', cascade="all, delete-orphan")
     shoppinglists = db.relationship(
         'Shoppinglist', back_populates='household', cascade="all, delete-orphan")
     member = db.relationship(
@@ -49,6 +63,19 @@ class HouseholdMember(db.Model, DbModelMixin, TimestampMixin):
         res['admin'] = getattr(self, 'admin')
         res['expense_balance'] = getattr(self, 'expense_balance')
         return res
+
+    def delete(self):
+        if len(self.household.member) <= 1:
+            self.household.delete()
+        elif self.owner:
+            newOwner = next((m for m in self.household.member if m.admin and m != self), next(
+                (m for m in self.household.member if m != self)))
+            newOwner.admin = True
+            newOwner.owner = True
+            newOwner.save()
+            super().delete()
+        else:
+            super().delete()
 
     @classmethod
     def find_by_ids(cls, household_id: int, user_id: int) -> Self:
