@@ -1,9 +1,9 @@
 from typing import Self
 from app import db
-from app.helpers import DbModelMixin, TimestampMixin
+from app.helpers import DbModelMixin, TimestampMixin, DbModelAuthorizeMixin
 
 
-class Tag(db.Model, DbModelMixin, TimestampMixin):
+class Tag(db.Model, DbModelMixin, TimestampMixin, DbModelAuthorizeMixin):
     __tablename__ = 'tag'
 
     id = db.Column(db.Integer, primary_key=True)

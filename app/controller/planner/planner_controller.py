@@ -2,7 +2,7 @@ from app.errors import NotFoundRequest
 from flask import jsonify, Blueprint
 from flask_jwt_extended import jwt_required
 from app import db
-from app.helpers import validate_args, authorizeFor
+from app.helpers import validate_args, authorize_household
 from app.models import Recipe, RecipeHistory, Planner
 from .schemas import AddPlannedRecipe, RemovePlannedRecipe
 
@@ -11,6 +11,7 @@ plannerHousehold = Blueprint('planner', __name__)
 
 @plannerHousehold.route('/recipes', methods=['GET'])
 @jwt_required()
+@authorize_household()
 def getAllPlannedRecipes(household_id):
     plannedRecipes = db.session.query(Planner.recipe_id).filter(Planner.household_id == household_id).group_by(
         Planner.recipe_id).scalar_subquery()
@@ -21,6 +22,7 @@ def getAllPlannedRecipes(household_id):
 
 @plannerHousehold.route('', methods=['GET'])
 @jwt_required()
+@authorize_household()
 def getPlanner(household_id):
     plans = Planner.all_from_household(household_id)
     return jsonify([e.obj_to_full_dict() for e in plans])
@@ -28,6 +30,7 @@ def getPlanner(household_id):
 
 @plannerHousehold.route('/recipe', methods=['POST'])
 @jwt_required()
+@authorize_household()
 @validate_args(AddPlannedRecipe)
 def addPlannedRecipe(args, household_id):
     recipe = Recipe.find_by_id(args['recipe_id'])
@@ -58,6 +61,7 @@ def addPlannedRecipe(args, household_id):
 
 @plannerHousehold.route('/recipe/<int:id>', methods=['DELETE'])
 @jwt_required()
+@authorize_household()
 @validate_args(RemovePlannedRecipe)
 def removePlannedRecipeById(args, household_id, id):
     recipe = Recipe.find_by_id(id)
@@ -74,6 +78,7 @@ def removePlannedRecipeById(args, household_id, id):
 
 @plannerHousehold.route('/recent-recipes', methods=['GET'])
 @jwt_required()
+@authorize_household()
 def getRecentRecipes(household_id):
     recipes = RecipeHistory.get_recent(household_id)
     return jsonify([e.recipe.obj_to_full_dict() for e in recipes])
@@ -81,6 +86,7 @@ def getRecentRecipes(household_id):
 
 @plannerHousehold.route('/suggested-recipes', methods=['GET'])
 @jwt_required()
+@authorize_household()
 def getSuggestedRecipes(household_id):
     # all suggestions
     suggested_recipes = Recipe.find_suggestions(household_id)
@@ -95,6 +101,7 @@ def getSuggestedRecipes(household_id):
 
 @plannerHousehold.route('/refresh-suggested-recipes', methods=['GET', 'POST'])
 @jwt_required()
+@authorize_household()
 def getRefreshedSuggestedRecipes(household_id):
     # re-compute suggestion ranking
     Recipe.compute_suggestion_ranking()

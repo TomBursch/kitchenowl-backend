@@ -1,5 +1,5 @@
 from .schemas import SetSettingsSchema
-from app.helpers import validate_args, admin_required
+from app.helpers import validate_args, server_admin_required
 from flask import jsonify, Blueprint
 from flask_jwt_extended import jwt_required
 from app.models import Settings
@@ -9,7 +9,7 @@ settings = Blueprint('settings', __name__)
 
 @settings.route('', methods=['POST'])
 @jwt_required()
-@admin_required
+@server_admin_required()
 def setSettings():
     settings = Settings.get()
     settings.save()

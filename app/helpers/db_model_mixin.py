@@ -1,7 +1,6 @@
 from __future__ import annotations
 from typing import Self
 from app import db
-from app.helpers.access_type import AccessType
 
 
 class DbModelMixin(object):
@@ -43,13 +42,6 @@ class DbModelMixin(object):
 
         return d
 
-    def authorized(access: AccessType, args: dict[str, any]) -> bool:
-        return False
-
-    @classmethod
-    def authorized(access: AccessType, args: dict[str, any]) -> bool:
-        return False
-
     @classmethod
     def get_column_names(cls) -> list[str]:
         return list(cls.__table__.columns.keys())
@@ -81,7 +73,7 @@ class DbModelMixin(object):
         IMPORTANT: requires name column
         """
         return cls.query.order_by(cls.name).all()
-    
+
     @classmethod
     def all_from_household(cls, household_id: int) -> list[Self]:
         """
@@ -89,7 +81,7 @@ class DbModelMixin(object):
         IMPORTANT: requires household_id column
         """
         return cls.query.filter(cls.household_id == household_id).order_by(cls.id).all()
-    
+
     @classmethod
     def all_from_household_by_name(cls, household_id: int) -> list[Self]:
         """

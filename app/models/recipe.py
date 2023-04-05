@@ -1,15 +1,14 @@
 from __future__ import annotations
 from typing import Self
 from app import db
-from app.helpers import DbModelMixin, TimestampMixin
-from app.helpers.db_set_type import DbSetType
+from app.helpers import DbModelMixin, TimestampMixin, DbModelAuthorizeMixin
 from .item import Item
 from .tag import Tag
 from .planner import Planner
 from random import randint
 
 
-class Recipe(db.Model, DbModelMixin, TimestampMixin):
+class Recipe(db.Model, DbModelMixin, TimestampMixin, DbModelAuthorizeMixin):
     __tablename__ = 'recipe'
 
     id = db.Column(db.Integer, primary_key=True)

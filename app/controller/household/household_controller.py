@@ -1,5 +1,5 @@
 from app.config import SUPPORTED_LANGUAGES
-from app.helpers import validate_args, authorizeFor
+from app.helpers import validate_args, authorize_household
 from flask import jsonify, Blueprint
 from app.errors import NotFoundRequest
 from flask_jwt_extended import current_user, jwt_required
@@ -18,6 +18,7 @@ def getUserHouseholds():
 
 @household.route('/<int:household_id>', methods=['GET'])
 @jwt_required()
+@authorize_household()
 def getHousehold(household_id):
     household = Household.find_by_id(household_id)
     if not household:
@@ -59,6 +60,7 @@ def addHousehold(args):
 
 @household.route('/<int:household_id>', methods=['POST'])
 @jwt_required()
+@authorize_household(requires_admin=True)
 @validate_args(UpdateHousehold)
 def updateHousehold(args, household_id):
     household = Household.find_by_id(household_id)
@@ -85,6 +87,7 @@ def updateHousehold(args, household_id):
 
 @household.route('/<int:household_id>', methods=['DELETE'])
 @jwt_required()
+@authorize_household(requires_admin=True)
 def deleteHouseholdById(household_id):
     Household.delete_by_id(household_id)
     return jsonify({'msg': 'DONE'})
@@ -92,6 +95,7 @@ def deleteHouseholdById(household_id):
 
 @household.route('/<int:household_id>/member/<int:user_id>', methods=['PUT'])
 @jwt_required()
+@authorize_household(requires_admin=True)
 @validate_args(UpdateHouseholdMember)
 def putHouseholdMember(args, household_id, user_id):
     hm = HouseholdMember.find_by_ids(household_id, user_id)
@@ -111,8 +115,9 @@ def putHouseholdMember(args, household_id, user_id):
     return jsonify(hm.obj_to_user_dict())
 
 
-@household.route('/<int:household_id>member/<int:user_id>', methods=['DELETE'])
+@household.route('/<int:household_id>/member/<int:user_id>', methods=['DELETE'])
 @jwt_required()
+@authorize_household(requires_admin=True)
 def deleteHouseholdMember(household_id, user_id):
     hm = HouseholdMember.find_by_ids(household_id, user_id)
     if hm:

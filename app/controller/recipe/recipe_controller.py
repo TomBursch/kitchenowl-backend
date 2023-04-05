@@ -9,7 +9,7 @@ from app.errors import NotFoundRequest
 from app.models.recipe import RecipeItems, RecipeTags
 from flask import jsonify, Blueprint
 from flask_jwt_extended import jwt_required
-from app.helpers import authorizeFor, validate_args
+from app.helpers import validate_args, authorize_household
 from app.models import Recipe, Item, Tag
 from recipe_scrapers import scrape_me
 from recipe_scrapers._exceptions import SchemaOrgException
@@ -20,10 +20,10 @@ recipe = Blueprint('recipe', __name__)
 recipeHousehold = Blueprint('recipe', __name__)
 
 
-@recipe.route('', methods=['GET'])
 @recipeHousehold.route('', methods=['GET'])
 @jwt_required()
-def getAllRecipes(household_id=None):
+@authorize_household()
+def getAllRecipes(household_id):
     return jsonify([e.obj_to_full_dict() for e in Recipe.all_from_household_by_name(household_id)])
 
 
@@ -33,11 +33,13 @@ def getRecipeById(id):
     recipe = Recipe.find_by_id(id)
     if not recipe:
         raise NotFoundRequest()
+    recipe.checkAuthorized()
     return jsonify(recipe.obj_to_full_dict())
 
 
 @recipeHousehold.route('', methods=['POST'])
 @jwt_required()
+@authorize_household()
 @validate_args(AddRecipe)
 def addRecipe(args, household_id):
     recipe = Recipe()
@@ -88,6 +90,8 @@ def updateRecipe(args, id):  # noqa: C901
     recipe = Recipe.find_by_id(id)
     if not recipe:
         raise NotFoundRequest()
+    recipe.checkAuthorized()
+
     if 'name' in args:
         recipe.name = args['name']
     if 'description' in args:
@@ -113,7 +117,8 @@ def updateRecipe(args, id):  # noqa: C901
         for recipeItem in args['items']:
             item = Item.find_by_name(recipe.household_id, recipeItem['name'])
             if not item:
-                item = Item.create_by_name(recipe.household_id, recipeItem['name'])
+                item = Item.create_by_name(
+                    recipe.household_id, recipeItem['name'])
             con = RecipeItems.find_by_ids(recipe.id, item.id)
             if con:
                 if 'description' in recipeItem:
@@ -148,12 +153,17 @@ def updateRecipe(args, id):  # noqa: C901
 @recipe.route('/<int:id>', methods=['DELETE'])
 @jwt_required()
 def deleteRecipeById(id):
-    Recipe.delete_by_id(id)
+    recipe = Recipe.find_by_id(id)
+    if not recipe:
+        raise NotFoundRequest()
+    recipe.checkAuthorized()
+    recipe.delete()
     return jsonify({'msg': 'DONE'})
 
 
 @recipeHousehold.route('/search', methods=['GET'])
 @jwt_required()
+@authorize_household()
 @validate_args(SearchByNameRequest)
 def searchRecipeByName(args, household_id):
     if 'only_ids' in args and args['only_ids']:
@@ -163,6 +173,7 @@ def searchRecipeByName(args, household_id):
 
 @recipeHousehold.route('/filter', methods=['POST'])
 @jwt_required()
+@authorize_household()
 @validate_args(GetAllFilterRequest)
 def getAllFiltered(args, household_id):
     return jsonify([e.obj_to_full_dict() for e in Recipe.all_by_name_with_filter(household_id, args["filter"])])

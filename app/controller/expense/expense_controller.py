@@ -7,8 +7,8 @@ from flask import jsonify, Blueprint
 from flask_jwt_extended import current_user, jwt_required
 from sqlalchemy import func
 from app import db
-from app.helpers import validate_args, admin_required, authorizeFor
-from app.models import Expense, ExpensePaidFor, User, ExpenseCategory, HouseholdMember
+from app.helpers import validate_args, server_admin_required, authorize_household
+from app.models import Expense, ExpensePaidFor, ExpenseCategory, HouseholdMember
 from .schemas import GetExpenses, AddExpense, UpdateExpense, AddExpenseCategory, UpdateExpenseCategory, GetExpenseOverview
 
 expense = Blueprint('expense', __name__)
@@ -17,6 +17,7 @@ expenseHousehold = Blueprint('expense', __name__)
 
 @expenseHousehold.route('', methods=['GET'])
 @jwt_required()
+@authorize_household()
 @validate_args(GetExpenses)
 def getAllExpenses(args, household_id):
     filter = [Expense.household_id == household_id]
@@ -40,11 +41,13 @@ def getExpenseById(id):
     expense = Expense.find_by_id(id)
     if not expense:
         raise NotFoundRequest()
+    expense.checkAuthorized()
     return jsonify(expense.obj_to_full_dict())
 
 
 @expenseHousehold.route('', methods=['POST'])
 @jwt_required()
+@authorize_household()
 @validate_args(AddExpense)
 def addExpense(args, household_id):
     member = HouseholdMember.find_by_ids(household_id, args['paid_by']['id'])
@@ -93,6 +96,8 @@ def updateExpense(args, id):  # noqa: C901
     expense = Expense.find_by_id(id)
     if not expense:
         raise NotFoundRequest()
+    expense.checkAuthorized()
+
     if 'name' in args:
         expense.name = args['name']
     if 'amount' in args:
@@ -144,14 +149,16 @@ def deleteExpenseById(id):
     expense = Expense.find_by_id(id)
     if not expense:
         raise NotFoundRequest()
-    Expense.delete_by_id(id)
+    expense.checkAuthorized()
+
+    expense.delete()
     recalculateBalances(expense.household_id)
     return jsonify({'msg': 'DONE'})
 
 
 @expenseHousehold.route('/recalculate-balances')
 @jwt_required()
-@admin_required
+@authorize_household(requires_admin=True)
 def calculateBalances(household_id):
     recalculateBalances(household_id)
 
@@ -172,12 +179,14 @@ def recalculateBalances(household_id):
 
 @expenseHousehold.route('/categories', methods=['GET'])
 @jwt_required()
+@authorize_household()
 def getExpenseCategories(household_id):
     return jsonify([e.obj_to_dict() for e in ExpenseCategory.all_from_household_by_name(household_id)])
 
 
 @expenseHousehold.route('/overview', methods=['GET'])
 @jwt_required()
+@authorize_household()
 @validate_args(GetExpenseOverview)
 def getExpenseOverview(args, household_id):
     categories = list(
@@ -229,6 +238,7 @@ def getExpenseOverview(args, household_id):
 
 @expenseHousehold.route('/categories', methods=['POST'])
 @jwt_required()
+@authorize_household()
 @validate_args(AddExpenseCategory)
 def addExpenseCategory(args, household_id):
     category = ExpenseCategory()
@@ -241,9 +251,12 @@ def addExpenseCategory(args, household_id):
 
 @expense.route('/categories/<int:id>', methods=['DELETE'])
 @jwt_required()
-@admin_required
 def deleteExpenseCategoryById(id):
-    ExpenseCategory.delete_by_id(id)
+    category = ExpenseCategory.find_by_id(id)
+    if not category:
+        raise NotFoundRequest()
+    category.checkAuthorized()
+    category.delete()
     return jsonify({'msg': 'DONE'})
 
 
@@ -252,9 +265,9 @@ def deleteExpenseCategoryById(id):
 @validate_args(UpdateExpenseCategory)
 def updateExpenseCategory(args, id):
     category = ExpenseCategory.find_by_id(id)
-
     if not category:
         raise NotFoundRequest()
+    category.checkAuthorized()
 
     if 'name' in args:
         category.name = args['name']

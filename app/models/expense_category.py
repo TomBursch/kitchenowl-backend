@@ -1,10 +1,10 @@
 from __future__ import annotations
 from typing import Self
 from app import db
-from app.helpers import DbModelMixin, TimestampMixin
+from app.helpers import DbModelMixin, TimestampMixin, DbModelAuthorizeMixin
 
 
-class ExpenseCategory(db.Model, DbModelMixin, TimestampMixin):
+class ExpenseCategory(db.Model, DbModelMixin, TimestampMixin, DbModelAuthorizeMixin):
     __tablename__ = 'expense_category'
 
     id = db.Column(db.Integer, primary_key=True)

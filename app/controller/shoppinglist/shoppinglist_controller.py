@@ -2,7 +2,7 @@ from flask import jsonify, Blueprint
 from flask_jwt_extended import jwt_required
 from app import db
 from app.models import Item, Shoppinglist, History, Status, Association, ShoppinglistItems
-from app.helpers import validate_args, authorizeFor
+from app.helpers import validate_args, authorize_household
 from .schemas import (RemoveItem, UpdateDescription,
                       AddItemByName, CreateList, AddRecipeItems, GetItems, UpdateList)
 from app.errors import NotFoundRequest, ForbiddenRequest
@@ -16,6 +16,7 @@ shoppinglistHousehold = Blueprint('shoppinglist', __name__)
 
 @shoppinglistHousehold.route('', methods=['POST'])
 @jwt_required()
+@authorize_household()
 @validate_args(CreateList)
 def createShoppinglist(args, household_id):
     return jsonify(Shoppinglist(name=args['name'], household_id=household_id).save().obj_to_dict())
@@ -23,6 +24,7 @@ def createShoppinglist(args, household_id):
 
 @shoppinglistHousehold.route('', methods=['GET'])
 @jwt_required()
+@authorize_household()
 def getShoppinglists(household_id):
     shoppinglists = Shoppinglist.all_from_household(household_id)
     return jsonify([e.obj_to_dict() for e in shoppinglists])
@@ -35,6 +37,7 @@ def updateShoppinglist(args, id):
     shoppinglist = Shoppinglist.find_by_id(id)
     if not shoppinglist:
         raise NotFoundRequest()
+    shoppinglist.checkAuthorized()
 
     if 'name' in args:
         shoppinglist.name = args['name']
@@ -49,20 +52,22 @@ def deleteShoppinglist(id):
     shoppinglist = Shoppinglist.find_by_id(id)
     if not shoppinglist:
         raise NotFoundRequest()
+    shoppinglist.checkAuthorized()
     if shoppinglist.isDefault():
-        return ForbiddenRequest()
+        raise ForbiddenRequest()
     shoppinglist.delete()
 
     return jsonify({'msg': 'DONE'})
 
 
-@shoppinglist.route('/<int:id>/item/<item_id>', methods=['POST'])
+@shoppinglist.route('/<int:id>/item/<int:item_id>', methods=['POST'])
 @jwt_required()
 @validate_args(UpdateDescription)
 def updateItemDescription(args, id, item_id):
     con = ShoppinglistItems.find_by_ids(id, item_id)
     if not con:
         raise NotFoundRequest()
+    con.shoppinglist.checkAuthorized()
 
     con.description = args['description'] or ''
     con.save()
@@ -73,6 +78,11 @@ def updateItemDescription(args, id, item_id):
 @jwt_required()
 @validate_args(GetItems)
 def getAllShoppingListItems(args, id):
+    shoppinglist = Shoppinglist.find_by_id(id)
+    if not shoppinglist:
+        raise NotFoundRequest()
+    shoppinglist.checkAuthorized()
+
     orderby = [Item.name]
     if ('orderby' in args):
         if (args['orderby'] == 1):
@@ -89,6 +99,11 @@ def getAllShoppingListItems(args, id):
 @shoppinglist.route('/<int:id>/recent-items', methods=['GET'])
 @jwt_required()
 def getRecentItems(id):
+    shoppinglist = Shoppinglist.find_by_id(id)
+    if not shoppinglist:
+        raise NotFoundRequest()
+    shoppinglist.checkAuthorized()
+
     items = History.get_recent(id)
     return jsonify([e.item.obj_to_dict() | {'description': e.description} for e in items])
 
@@ -137,6 +152,11 @@ def getSuggestionsBasedOnFrequency(id, item_count):
 @shoppinglist.route('/<int:id>/suggested-items', methods=['GET'])
 @jwt_required()
 def getSuggestedItems(id):
+    shoppinglist = Shoppinglist.find_by_id(id)
+    if not shoppinglist:
+        raise NotFoundRequest()
+    shoppinglist.checkAuthorized()
+
     item_suggestion_count = 9
     suggestions = []
 
@@ -155,9 +175,12 @@ def addShoppinglistItemByName(args, id):
     shoppinglist = Shoppinglist.find_by_id(id)
     if not shoppinglist:
         raise NotFoundRequest()
+    shoppinglist.checkAuthorized()
+
     item = Item.find_by_name(shoppinglist.household_id, args['name'])
     if not item:
         item = Item.create_by_name(shoppinglist.household_id, args['name'])
+    # item.checkAuthorized()
 
     con = ShoppinglistItems.find_by_ids(shoppinglist.id, item.id)
     if not con:
@@ -179,6 +202,8 @@ def removeShoppinglistItem(args, id):
     shoppinglist = Shoppinglist.find_by_id(id)
     if not shoppinglist:
         raise NotFoundRequest()
+    shoppinglist.checkAuthorized()
+
     item = Item.find_by_id(args['item_id'])
     if not item:
         item = Item.find_by_name(args['name'])
@@ -205,6 +230,7 @@ def addRecipeItems(args, id):
     shoppinglist = Shoppinglist.find_by_id(id)
     if not shoppinglist:
         raise NotFoundRequest()
+    shoppinglist.checkAuthorized()
 
     try:
         for recipeItem in args['items']:

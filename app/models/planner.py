@@ -1,10 +1,10 @@
 from __future__ import annotations
 from typing import Self
 from app import db
-from app.helpers import DbModelMixin, TimestampMixin
+from app.helpers import DbModelMixin, TimestampMixin, DbModelAuthorizeMixin
 
 
-class Planner(db.Model, DbModelMixin, TimestampMixin):
+class Planner(db.Model, DbModelMixin, TimestampMixin, DbModelAuthorizeMixin):
     __tablename__ = 'planner'
 
     recipe_id = db.Column(db.Integer, db.ForeignKey(

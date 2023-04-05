@@ -1,8 +1,8 @@
 from app.errors import NotFoundRequest, UnauthorizedRequest
-from app.helpers.admin_required import admin_required
+from app.helpers.server_admin_required import server_admin_required
 from app.helpers import validate_args
 from flask import jsonify, Blueprint
-from flask_jwt_extended import current_user, jwt_required, get_jwt_identity
+from flask_jwt_extended import current_user, jwt_required
 from app.models import User
 from .schemas import CreateUser, UpdateUser, SearchByNameRequest
 
@@ -24,7 +24,7 @@ def getLoggedInUser():
 
 @user.route('/<int:id>', methods=['GET'])
 @jwt_required()
-@admin_required
+@server_admin_required()
 def getUserById(id):
     user = User.find_by_id(id)
     if not user:
@@ -32,16 +32,26 @@ def getUserById(id):
     return jsonify(user.obj_to_dict())
 
 
-@user.route('/<int:id>', methods=['DELETE'])
+@user.route('', methods=['DELETE'])
 @jwt_required()
-@admin_required
-def deleteUserById(id):
-    user = User.find_by_id(id)
-    if not user or user.owner:
+def deleteUser():
+    if not current_user:
         raise UnauthorizedRequest(
             message='Cannot delete this user'
         )
-    User.delete_by_id(id)
+    current_user.delete()
+    return jsonify({'msg': 'DONE'})
+
+@user.route('/<int:id>', methods=['DELETE'])
+@jwt_required()
+@server_admin_required()
+def deleteUserById(id):
+    user = User.find_by_id(id)
+    if not user:
+        raise UnauthorizedRequest(
+            message='Cannot delete this user'
+        )
+    user.delete()
     return jsonify({'msg': 'DONE'})
 
 
@@ -49,7 +59,7 @@ def deleteUserById(id):
 @jwt_required()
 @validate_args(UpdateUser)
 def updateUser(args):
-    user = User.find_by_username(get_jwt_identity())
+    user = current_user;
     if not user:
         raise NotFoundRequest()
     if 'name' in args:
@@ -62,7 +72,7 @@ def updateUser(args):
 
 @user.route('/<int:id>', methods=['POST'])
 @jwt_required()
-@admin_required
+@server_admin_required()
 @validate_args(UpdateUser)
 def updateUserById(args, id):
     user = User.find_by_id(id)
@@ -82,7 +92,7 @@ def updateUserById(args, id):
 
 @user.route('/new', methods=['POST'])
 @jwt_required()
-@admin_required
+@server_admin_required()
 @validate_args(CreateUser)
 def createUser(args):
     User.create(args['username'].lower(), args['password'], args['name'])

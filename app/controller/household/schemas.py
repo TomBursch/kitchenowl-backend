@@ -31,4 +31,4 @@ class UpdateHousehold(Schema):
 class UpdateHouseholdMember(Schema):
     class Meta:
         unknown = EXCLUDE
-    view_ordering = fields.List(fields.String)
+    admin = fields.Boolean()

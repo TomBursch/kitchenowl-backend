@@ -1,4 +1,4 @@
-from app.helpers import validate_args, authorizeFor
+from app.helpers import validate_args, authorize_household
 from flask import jsonify, Blueprint
 from app.errors import InvalidUsage, NotFoundRequest
 from flask_jwt_extended import jwt_required
@@ -8,8 +8,10 @@ from .schemas import SearchByNameRequest, UpdateItem
 item = Blueprint('item', __name__)
 itemHousehold = Blueprint('item', __name__)
 
+
 @itemHousehold.route('', methods=['GET'])
 @jwt_required()
+@authorize_household()
 def getAllItems(household_id):
     return jsonify([e.obj_to_dict() for e in Item.all_by_name_with_filter(household_id)])
 
@@ -20,28 +22,38 @@ def getItem(id):
     item = Item.find_by_id(id)
     if not item:
         raise NotFoundRequest()
+    item.checkAuthorized()
     return jsonify(item.obj_to_dict())
 
 
 @item.route('/<int:id>/recipes', methods=['GET'])
 @jwt_required()
 def getItemRecipes(id):
-    items = RecipeItems.query.filter(
+    item = Item.find_by_id(id)
+    if not item:
+        raise NotFoundRequest()
+    item.checkAuthorized()
+    recipe = RecipeItems.query.filter(
         RecipeItems.item_id == id, RecipeItems.optional == False).join(  # noqa
         RecipeItems.recipe).order_by(
         Recipe.name).all()
-    return jsonify([e.obj_to_recipe_dict() for e in items])
+    return jsonify([e.obj_to_recipe_dict() for e in recipe])
 
 
 @item.route('/<int:id>', methods=['DELETE'])
 @jwt_required()
 def deleteItemById(id):
-    Item.delete_by_id(id)
+    item = Item.find_by_id(id)
+    if not item:
+        raise NotFoundRequest()
+    item.checkAuthorized()
+    item.delete()
     return jsonify({'msg': 'DONE'})
 
 
 @itemHousehold.route('/search', methods=['GET'])
 @jwt_required()
+@authorize_household()
 @validate_args(SearchByNameRequest)
 def searchItemByName(args, household_id):
     return jsonify([e.obj_to_dict() for e in Item.search_name(args['query'], household_id)])
@@ -54,6 +66,8 @@ def updateItem(args, id):
     item = Item.find_by_id(id)
     if not item:
         raise NotFoundRequest()
+    item.checkAuthorized()
+
     if 'category' in args:
         if not args['category']:
             item.category = None
