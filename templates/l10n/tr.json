@@ -1,15 +1,15 @@
 {
   "categories": {
-    "bread": "Unlu Mamüller",
-    "canned": "Konserve",
-    "dairy": "Süt Ürünleri",
-    "drinks": "İçecek",
-    "freezer": "Dondurulmuş",
-    "fruits_vegetables": "Meyve ve Sebzeler",
-    "grain": "Tahıl Ürünleri",
-    "hygiene": "Temizlik",
-    "refrigerated": "Soğuk Muhafaza",
-    "snacks": "Atıştırmalıklar"
+    "bread": "🍞 Unlu Mamüller",
+    "canned": "🥫 Konserve",
+    "dairy": "🥛 Süt Ürünleri",
+    "drinks": "🍹 İçecek",
+    "freezer": "❄️ Dondurulmuş",
+    "fruits_vegetables": "🥬 Meyve ve Sebzeler",
+    "grain": "🥟 Tahıl Ürünleri",
+    "hygiene": "🚽 Temizlik",
+    "refrigerated": "💧 Soğuk Muhafaza",
+    "snacks": "🥜 Atıştırmalıklar"
   },
   "items": {
     "aioli": "Sarımsaklı Mayonez",
