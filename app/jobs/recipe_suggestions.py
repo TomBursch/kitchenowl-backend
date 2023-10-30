@@ -29,7 +29,7 @@ def findMealInstances(added, dropped):
     while added_pointer < len(added) and dropped_pointer < len(dropped):
         # add the currently added recipe to the dict added_recipes if it has not yet been dropped
         current_added = added[added_pointer]
-        if (current_added.recipe_id in dropped_recipes and dropped_recipes[current_added.recipe_id] - current_added.created_at < 0):
+        if (current_added.recipe_id in dropped_recipes and dropped_recipes[current_added.recipe_id] - current_added.created_at < datetime.timedelta(hours=0)):
             added_recipes[current_added.recipe_id] = current_added.created_at
         added_pointer += 1
 
