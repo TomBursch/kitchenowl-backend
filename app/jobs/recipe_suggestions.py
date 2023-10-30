@@ -21,14 +21,16 @@ def findMealInstances(added, dropped):
     dropped_pointer = 0
     # key:recipe_id, value:created_at
     added_recipes = dict()
-
+    dropped_recipes = dict()
+    
     # meals that are considered to have been cooked
     meals = list()
 
     while added_pointer < len(added) and dropped_pointer < len(dropped):
-        # add the currently added recipe to the dict added_recipes
+        # add the currently added recipe to the dict added_recipes if it has not yet been dropped
         current_added = added[added_pointer]
-        added_recipes[current_added.recipe_id] = current_added.created_at
+        if (current_added.recipe_id in dropped_recipes and dropped_recipes[current_added.recipe_id] - current_added.created_at < 0):
+            added_recipes[current_added.recipe_id] = current_added.created_at
         added_pointer += 1
 
         # look for whether the current dropped recipe has yet been added
@@ -47,6 +49,8 @@ def findMealInstances(added, dropped):
 
             # proceed to next dropped recipe
             added_recipes.pop(current_dropped.recipe_id)
+            dropped_recipes[current_dropped.recipe_id] = current_dropped.created_at
+            
             dropped_pointer += 1
             # break if no more dropped recipes
             if not (dropped_pointer < len(dropped)):
