@@ -23,6 +23,7 @@ Added = [
     {"recipe_id": 7, "created_at": start_time+time_diff(2)},
     {"recipe_id": 1, "created_at": start_time+time_diff(3)},
     {"recipe_id": 1, "created_at": start_time+time_diff(4)},
+    {"recipe_id": 1, "created_at": start_time+time_diff(7)},
 ]
 
 Dropped = [
@@ -32,6 +33,7 @@ Dropped = [
     {"recipe_id": 4, "created_at": start_time+time_diff(5)},
     {"recipe_id": 7, "created_at": start_time+time_diff(5)},
     {"recipe_id": 1, "created_at": start_time+time_diff(6)},
+    {"recipe_id": 1, "created_at": start_time+time_diff(8)},
 ]
 
 ExpectedMeals = [
