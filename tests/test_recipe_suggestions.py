@@ -14,6 +14,7 @@ def time_diff(h):
 
 Added = [
     {"recipe_id": 1, "created_at": start_time},
+    {"recipe_id": 1, "created_at": start_time+time_diff(2)},
     {"recipe_id": 2, "created_at": start_time+time_diff(2)},
     {"recipe_id": 3, "created_at": start_time+time_diff(2)},
     {"recipe_id": 4, "created_at": start_time+time_diff(2)},
@@ -21,6 +22,7 @@ Added = [
     {"recipe_id": 6, "created_at": start_time+time_diff(2)},
     {"recipe_id": 7, "created_at": start_time+time_diff(2)},
     {"recipe_id": 1, "created_at": start_time+time_diff(3)},
+    {"recipe_id": 1, "created_at": start_time+time_diff(4)},
 ]
 
 Dropped = [
@@ -58,7 +60,7 @@ class objectview(object):
     # single meal but dropped recipes left
     (Added[:1], Dropped[:1]+Dropped[:1], ExpectedMeals[:1]),
     # no meal as duration too short
-    (Added[1:2], Dropped[1:2], []),
+    (Added[2:3], Dropped[2:3], []),
     # complete example
     (Added, Dropped, ExpectedMeals),
 ])
