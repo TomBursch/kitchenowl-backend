@@ -1,6 +1,6 @@
 import re
 
-from app.errors import NotFoundRequest
+from app.errors import NotFoundRequest, InvalidUsage
 from app.models.recipe import RecipeItems, RecipeTags
 from flask import jsonify, Blueprint
 from flask_jwt_extended import jwt_required
