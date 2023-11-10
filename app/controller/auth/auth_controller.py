@@ -1,11 +1,16 @@
 from datetime import datetime
+import uuid
+
+from oic import rndstr
+from oic.oic.message import AuthorizationResponse
+from oic.oauth2.message import ErrorResponse
 from app.helpers import validate_args
 from flask import jsonify, Blueprint, request
 from flask_jwt_extended import current_user, jwt_required, get_jwt
-from app.models import User, Token
-from app.errors import UnauthorizedRequest, InvalidUsage
-from .schemas import Login, Signup, CreateLongLivedToken
-from app.config import jwt, OPEN_REGISTRATION
+from app.models import User, Token, OIDCLink, OIDCRequest
+from app.errors import NotFoundRequest, UnauthorizedRequest, InvalidUsage
+from .schemas import Login, Signup, CreateLongLivedToken, GetOIDCLoginUrl, LoginOIDC
+from app.config import EMAIL_MANDATORY, FRONT_URL, jwt, OPEN_REGISTRATION, oidc_clients
 
 auth = Blueprint("auth", __name__)
 
@@ -171,3 +176,128 @@ def deleteLongLivedToken(id):
     token.delete()
 
     return jsonify({"msg": "DONE"})
+
+
+if FRONT_URL:
+
+    @auth.route("oidc", methods=["GET"])
+    @validate_args(GetOIDCLoginUrl)
+    def getOIDCLoginUrl(args):
+        provider = args["provider"] if "provider" in args else "custom"
+        if not provider in oidc_clients:
+            raise NotFoundRequest()
+        client = oidc_clients[provider]
+        if not client:
+            raise UnauthorizedRequest(
+                message="Unauthorized: IP {} get login url for unknown OIDC provider".format(
+                    request.remote_addr
+                )
+            )
+        state = rndstr()
+        nonce = rndstr()
+        args = {
+            "client_id": client.client_id,
+            "response_type": "code",
+            "scope": ["openid", "profile", "email"],
+            "nonce": nonce,
+            "state": state,
+            "redirect_uri": FRONT_URL + "/signin/redirect",
+        }
+
+        auth_req = client.construct_AuthorizationRequest(request_args=args)
+        login_url = auth_req.request(client.authorization_endpoint)
+        OIDCRequest(state=state, provider=provider, nonce=nonce).save()
+        return jsonify({"login_url": login_url, "state": state, "nonce": nonce})
+
+    @auth.route("callback", methods=["POST"])
+    @validate_args(LoginOIDC)
+    def loginWithOIDC(args):
+        # Validate oidc login
+        oicd_request = OIDCRequest.find_by_state(args["state"])
+        if not oicd_request:
+            raise UnauthorizedRequest(
+                message="Unauthorized: IP {} login attemp with unknown OIDC state".format(
+                    request.remote_addr
+                )
+            )
+        provider = oicd_request.provider
+        client = oidc_clients[provider]
+        if not client:
+            oicd_request.delete()
+            raise UnauthorizedRequest(
+                message="Unauthorized: IP {} login attemp with unknown OIDC provider".format(
+                    request.remote_addr
+                )
+            )
+
+        client.parse_response(
+            AuthorizationResponse,
+            info={"code": args["code"], "state": oicd_request.state},
+            sformat="dict",
+        )
+
+        tokenResponse = client.do_access_token_request(
+            scope=["openid", "profile", "email"],
+            state=oicd_request.state,
+            request_args={
+                "code": args["code"],
+                "redirect_uri": FRONT_URL + "/signin/redirect",
+            },
+            authn_method="client_secret_basic",
+        )
+        if isinstance(tokenResponse, ErrorResponse):
+            oicd_request.delete()
+            raise UnauthorizedRequest(
+                message="Unauthorized: IP {} login attemp for OIDC failed".format(
+                    request.remote_addr
+                )
+            )
+        userinfo = tokenResponse["id_token"]
+        if userinfo["nonce"] != oicd_request.nonce:
+            raise UnauthorizedRequest(
+                message="Unauthorized: IP {} login attemp for OIDC failed: mismatched nonce".format(
+                    request.remote_addr
+                )
+            )
+        oicd_request.delete()
+
+        # find user or create one
+        oidcLink = OIDCLink.find_by_ids(userinfo["sub"], provider)
+        if not oidcLink:
+            if "email" in userinfo:
+                if User.find_by_email(userinfo["email"].strip()):
+                    return "Request invalid: email", 400
+            elif EMAIL_MANDATORY:
+                return "Request invalid: email", 400
+
+            username = userinfo["sub"].lower().strip().replace(" ", "")
+            if User.find_by_username(username):
+                username = uuid.uuid4().hex
+            newUser = User(
+                username=username,
+                name=userinfo["name"].strip() or userinfo["sub"],
+                email=userinfo["email"].strip() if "email" in userinfo else None,
+                email_verified=userinfo["email_verified"]
+                if "email_verified" in userinfo
+                else False,
+                photo=userinfo["picture"] if "picture" in userinfo else None,
+            ).save()
+            oidcLink = OIDCLink(
+                sub=userinfo["sub"], provider=provider, user_id=newUser.id
+            ).save()
+            oidcLink.user = newUser
+
+        user: User = oidcLink.user
+
+        # login user
+        device = "Unkown"
+        if "device" in args:
+            device = args["device"]
+
+        # Create refresh token
+        refreshToken, refreshModel = Token.create_refresh_token(user, device)
+
+        # Create first access token
+        accesssToken, _ = Token.create_access_token(user, refreshModel)
+
+        return jsonify({"access_token": accesssToken, "refresh_token": refreshToken})
