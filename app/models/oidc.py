@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from typing import Self
 
 from app import db
@@ -9,7 +10,9 @@ class OIDCLink(db.Model, DbModelMixin, TimestampMixin):
 
     sub = db.Column(db.String(256), primary_key=True)
     provider = db.Column(db.String(24), primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    user_id = db.Column(
+        db.Integer, db.ForeignKey("user.id"), nullable=False, index=True
+    )
 
     user = db.relationship("User", back_populates="oidc_links")
 
@@ -24,7 +27,20 @@ class OIDCRequest(db.Model, DbModelMixin, TimestampMixin):
     state = db.Column(db.String(256), primary_key=True)
     provider = db.Column(db.String(24), primary_key=True)
     nonce = db.Column(db.String(256), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+
+    user = db.relationship("User", back_populates="oidc_link_requests")
 
     @classmethod
     def find_by_state(cls, state: str) -> Self:
-        return cls.query.filter(cls.state == state).first()
+        filter_before = datetime.utcnow() - timedelta(minutes=7)
+        return cls.query.filter(
+            cls.state == state,
+            cls.created_at >= filter_before,
+        ).first()
+
+    @classmethod
+    def delete_expired(cls):
+        filter_before = datetime.utcnow() - timedelta(minutes=7)
+        db.session.query(cls).filter(cls.created_at <= filter_before).delete()
+        db.session.commit()

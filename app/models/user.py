@@ -46,6 +46,10 @@ class User(db.Model, DbModelMixin, TimestampMixin):
     oidc_links = db.relationship(
         "OIDCLink", back_populates="user", cascade="all, delete-orphan"
     )
+    oidc_link_requests = db.relationship(
+        "OIDCRequest", back_populates="user", cascade="all, delete-orphan"
+    )
+
 
     def check_password(self, password: str) -> bool:
         return self.password and bcrypt.check_password_hash(self.password, password)

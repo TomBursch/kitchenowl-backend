@@ -1,4 +1,5 @@
 from datetime import datetime
+import re
 import uuid
 
 from oic import rndstr
@@ -181,6 +182,7 @@ def deleteLongLivedToken(id):
 if FRONT_URL:
 
     @auth.route("oidc", methods=["GET"])
+    @jwt_required(optional=True)
     @validate_args(GetOIDCLoginUrl)
     def getOIDCLoginUrl(args):
         provider = args["provider"] if "provider" in args else "custom"
@@ -206,10 +208,16 @@ if FRONT_URL:
 
         auth_req = client.construct_AuthorizationRequest(request_args=args)
         login_url = auth_req.request(client.authorization_endpoint)
-        OIDCRequest(state=state, provider=provider, nonce=nonce).save()
+        OIDCRequest(
+            state=state,
+            provider=provider,
+            nonce=nonce,
+            user_id=current_user.id if current_user else None,
+        ).save()
         return jsonify({"login_url": login_url, "state": state, "nonce": nonce})
 
     @auth.route("callback", methods=["POST"])
+    @jwt_required(optional=True)
     @validate_args(LoginOIDC)
     def loginWithOIDC(args):
         # Validate oidc login
@@ -226,6 +234,16 @@ if FRONT_URL:
             oicd_request.delete()
             raise UnauthorizedRequest(
                 message="Unauthorized: IP {} login attemp with unknown OIDC provider".format(
+                    request.remote_addr
+                )
+            )
+
+        if oicd_request.user != current_user:
+            if not current_user:
+                return "Request invalid: user not signed in for link request", 400 
+            oicd_request.delete()
+            raise UnauthorizedRequest(
+                message="Unauthorized: IP {} login attemp for a different account".format(
                     request.remote_addr
                 )
             )
@@ -263,6 +281,19 @@ if FRONT_URL:
 
         # find user or create one
         oidcLink = OIDCLink.find_by_ids(userinfo["sub"], provider)
+        if current_user:
+            if oidcLink and oidcLink.user_id != current_user.id:
+                return "Request invalid: oidc account already linked with other kitchenowl account", 400
+            if oidcLink:
+                return jsonify({"msg": "DONE"}) 
+            
+            if provider in map(lambda l: l.provider, current_user.oidc_links):
+                return "Request invalid: provider already linked with account", 400
+
+            oidcLink = OIDCLink(
+                sub=userinfo["sub"], provider=provider, user_id=current_user.id
+            ).save()
+            oidcLink.user = current_user
         if not oidcLink:
             if "email" in userinfo:
                 if User.find_by_email(userinfo["email"].strip()):
@@ -270,12 +301,20 @@ if FRONT_URL:
             elif EMAIL_MANDATORY:
                 return "Request invalid: email", 400
 
-            username = userinfo["sub"].lower().strip().replace(" ", "")
-            if User.find_by_username(username):
-                username = uuid.uuid4().hex
+            username = (
+                userinfo["name"].lower().strip().replace(" ", "")
+                if "name" in userinfo
+                else None
+            )
+            if not username or User.find_by_username(username):
+                username = userinfo["sub"].lower().strip().replace(" ", "")
+                if User.find_by_username(username):
+                    username = uuid.uuid4().hex
             newUser = User(
                 username=username,
-                name=userinfo["name"].strip() or userinfo["sub"],
+                name=userinfo["name"].strip()
+                if "name" in userinfo
+                else userinfo["sub"],
                 email=userinfo["email"].strip() if "email" in userinfo else None,
                 email_verified=userinfo["email_verified"]
                 if "email_verified" in userinfo
@@ -288,6 +327,10 @@ if FRONT_URL:
             oidcLink.user = newUser
 
         user: User = oidcLink.user
+
+        # Don't login already logged in user
+        if current_user:
+            return jsonify({"msg": "DONE"})
 
         # login user
         device = "Unkown"

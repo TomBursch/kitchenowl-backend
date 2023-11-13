@@ -63,6 +63,9 @@ OIDC_CONFIGURATION = os.getenv("OIDC_CONFIGURATION")
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 
+APPLE_CLIENT_ID = os.getenv("APPLE_CLIENT_ID")
+APPLE_CLIENT_SECRET = os.getenv("APPLE_CLIENT_SECRET")
+
 SUPPORTED_LANGUAGES = {
     "en": "English",
     "cs": "čeština",
@@ -143,6 +146,16 @@ if FRONT_URL:
             )
         )
         oidc_clients["google"] = client
+    if APPLE_CLIENT_ID and APPLE_CLIENT_SECRET:
+        client = Client(client_authn_method=CLIENT_AUTHN_METHOD)
+        client.provider_config("https://appleid.apple.com/")
+        client.store_registration_info(
+            RegistrationResponse(
+                client_id=APPLE_CLIENT_ID,
+                client_secret=APPLE_CLIENT_SECRET,
+            )
+        )
+        oidc_clients["apple"] = client
 
 
 if COLLECT_METRICS:
