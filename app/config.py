@@ -58,7 +58,7 @@ JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
 
 OIDC_CLIENT_ID = os.getenv("OIDC_CLIENT_ID")
 OIDC_CLIENT_SECRET = os.getenv("OIDC_CLIENT_SECRET")
-OIDC_CONFIGURATION = os.getenv("OIDC_CONFIGURATION")
+OIDC_ISSUER = os.getenv("OIDC_ISSUER")
 
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
@@ -127,9 +127,9 @@ socketio = SocketIO(
 )
 oidc_clients = {}
 if FRONT_URL:
-    if OIDC_CLIENT_ID and OIDC_CLIENT_SECRET and OIDC_CONFIGURATION:
+    if OIDC_CLIENT_ID and OIDC_CLIENT_SECRET and OIDC_ISSUER:
         client = Client(client_authn_method=CLIENT_AUTHN_METHOD)
-        client.provider_config(OIDC_CONFIGURATION)
+        client.provider_config(OIDC_ISSUER)
         client.store_registration_info(
             RegistrationResponse(
                 client_id=OIDC_CLIENT_ID, client_secret=OIDC_CLIENT_SECRET
