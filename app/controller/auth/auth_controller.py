@@ -6,7 +6,7 @@ from oic import rndstr
 from oic.oic.message import AuthorizationResponse
 from oic.oauth2.message import ErrorResponse
 from app.helpers import validate_args
-from flask import jsonify, Blueprint, redirect, request
+from flask import jsonify, Blueprint, request
 from flask_jwt_extended import current_user, jwt_required, get_jwt
 from app.models import User, Token, OIDCLink, OIDCRequest
 from app.errors import NotFoundRequest, UnauthorizedRequest, InvalidUsage
@@ -197,7 +197,9 @@ if FRONT_URL and len(oidc_clients) > 0:
             )
         state = rndstr()
         nonce = rndstr()
-        redirect_uri = ("kitchenowl://" if args["kitchenowl_scheme"] else FRONT_URL) + "/signin/redirect"
+        redirect_uri = (
+            "kitchenowl://" if args["kitchenowl_scheme"] else FRONT_URL
+        ) + "/signin/redirect"
         args = {
             "client_id": client.client_id,
             "response_type": "code",
@@ -213,7 +215,7 @@ if FRONT_URL and len(oidc_clients) > 0:
             state=state,
             provider=provider,
             nonce=nonce,
-            redirect_uri = redirect_uri,
+            redirect_uri=redirect_uri,
             user_id=current_user.id if current_user else None,
         ).save()
         return jsonify({"login_url": login_url, "state": state, "nonce": nonce})
@@ -242,7 +244,7 @@ if FRONT_URL and len(oidc_clients) > 0:
 
         if oicd_request.user != current_user:
             if not current_user:
-                return "Request invalid: user not signed in for link request", 400 
+                return "Request invalid: user not signed in for link request", 400
             oicd_request.delete()
             raise UnauthorizedRequest(
                 message="Unauthorized: IP {} login attemp for a different account".format(
@@ -285,10 +287,13 @@ if FRONT_URL and len(oidc_clients) > 0:
         oidcLink = OIDCLink.find_by_ids(userinfo["sub"], provider)
         if current_user:
             if oidcLink and oidcLink.user_id != current_user.id:
-                return "Request invalid: oidc account already linked with other kitchenowl account", 400
+                return (
+                    "Request invalid: oidc account already linked with other kitchenowl account",
+                    400,
+                )
             if oidcLink:
-                return jsonify({"msg": "DONE"}) 
-            
+                return jsonify({"msg": "DONE"})
+
             if provider in map(lambda l: l.provider, current_user.oidc_links):
                 return "Request invalid: provider already linked with account", 400
 
