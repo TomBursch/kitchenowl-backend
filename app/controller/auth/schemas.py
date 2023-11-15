@@ -52,6 +52,11 @@ class GetOIDCLoginUrl(Schema):
         validate=lambda a: a and not a.isspace(),
         load_only=True,
     )
+    kitchenowl_scheme = fields.Boolean(
+        required=False,
+        default=False,
+        load_only=True,
+    )
 
 
 class LoginOIDC(Schema):

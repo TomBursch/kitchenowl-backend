@@ -6,7 +6,7 @@ from oic import rndstr
 from oic.oic.message import AuthorizationResponse
 from oic.oauth2.message import ErrorResponse
 from app.helpers import validate_args
-from flask import jsonify, Blueprint, request
+from flask import jsonify, Blueprint, redirect, request
 from flask_jwt_extended import current_user, jwt_required, get_jwt
 from app.models import User, Token, OIDCLink, OIDCRequest
 from app.errors import NotFoundRequest, UnauthorizedRequest, InvalidUsage
@@ -197,13 +197,14 @@ if FRONT_URL and len(oidc_clients) > 0:
             )
         state = rndstr()
         nonce = rndstr()
+        redirect_uri = ("kitchenowl://" if args["kitchenowl_scheme"] else FRONT_URL) + "/signin/redirect"
         args = {
             "client_id": client.client_id,
             "response_type": "code",
             "scope": ["openid", "profile", "email"],
             "nonce": nonce,
             "state": state,
-            "redirect_uri": FRONT_URL + "/signin/redirect",
+            "redirect_uri": redirect_uri,
         }
 
         auth_req = client.construct_AuthorizationRequest(request_args=args)
@@ -212,6 +213,7 @@ if FRONT_URL and len(oidc_clients) > 0:
             state=state,
             provider=provider,
             nonce=nonce,
+            redirect_uri = redirect_uri,
             user_id=current_user.id if current_user else None,
         ).save()
         return jsonify({"login_url": login_url, "state": state, "nonce": nonce})
@@ -259,7 +261,7 @@ if FRONT_URL and len(oidc_clients) > 0:
             state=oicd_request.state,
             request_args={
                 "code": args["code"],
-                "redirect_uri": FRONT_URL + "/signin/redirect",
+                "redirect_uri": oicd_request.redirect_uri,
             },
             authn_method="client_secret_basic",
         )

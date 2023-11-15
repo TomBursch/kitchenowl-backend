@@ -27,6 +27,7 @@ class OIDCRequest(db.Model, DbModelMixin, TimestampMixin):
     state = db.Column(db.String(256), primary_key=True)
     provider = db.Column(db.String(24), primary_key=True)
     nonce = db.Column(db.String(256), nullable=False)
+    redirect_uri = db.Column(db.String(256), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
 
     user = db.relationship("User", back_populates="oidc_link_requests")
