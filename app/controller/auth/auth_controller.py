@@ -225,27 +225,27 @@ if FRONT_URL and len(oidc_clients) > 0:
     @validate_args(LoginOIDC)
     def loginWithOIDC(args):
         # Validate oidc login
-        oicd_request = OIDCRequest.find_by_state(args["state"])
-        if not oicd_request:
+        oidc_request = OIDCRequest.find_by_state(args["state"])
+        if not oidc_request:
             raise UnauthorizedRequest(
                 message="Unauthorized: IP {} login attemp with unknown OIDC state".format(
                     request.remote_addr
                 )
             )
-        provider = oicd_request.provider
+        provider = oidc_request.provider
         client = oidc_clients[provider]
         if not client:
-            oicd_request.delete()
+            oidc_request.delete()
             raise UnauthorizedRequest(
                 message="Unauthorized: IP {} login attemp with unknown OIDC provider".format(
                     request.remote_addr
                 )
             )
 
-        if oicd_request.user != current_user:
+        if oidc_request.user != current_user:
             if not current_user:
                 return "Request invalid: user not signed in for link request", 400
-            oicd_request.delete()
+            oidc_request.delete()
             raise UnauthorizedRequest(
                 message="Unauthorized: IP {} login attemp for a different account".format(
                     request.remote_addr
@@ -254,34 +254,34 @@ if FRONT_URL and len(oidc_clients) > 0:
 
         client.parse_response(
             AuthorizationResponse,
-            info={"code": args["code"], "state": oicd_request.state},
+            info={"code": args["code"], "state": oidc_request.state},
             sformat="dict",
         )
 
         tokenResponse = client.do_access_token_request(
             scope=["openid", "profile", "email"],
-            state=oicd_request.state,
+            state=oidc_request.state,
             request_args={
                 "code": args["code"],
-                "redirect_uri": oicd_request.redirect_uri,
+                "redirect_uri": oidc_request.redirect_uri,
             },
             authn_method="client_secret_basic",
         )
         if isinstance(tokenResponse, ErrorResponse):
-            oicd_request.delete()
+            oidc_request.delete()
             raise UnauthorizedRequest(
                 message="Unauthorized: IP {} login attemp for OIDC failed".format(
                     request.remote_addr
                 )
             )
         userinfo = tokenResponse["id_token"]
-        if userinfo["nonce"] != oicd_request.nonce:
+        if userinfo["nonce"] != oidc_request.nonce:
             raise UnauthorizedRequest(
                 message="Unauthorized: IP {} login attemp for OIDC failed: mismatched nonce".format(
                     request.remote_addr
                 )
             )
-        oicd_request.delete()
+        oidc_request.delete()
 
         # find user or create one
         oidcLink = OIDCLink.find_by_ids(userinfo["sub"], provider)
