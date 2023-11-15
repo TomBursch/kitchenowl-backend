@@ -179,7 +179,7 @@ def deleteLongLivedToken(id):
     return jsonify({"msg": "DONE"})
 
 
-if FRONT_URL:
+if FRONT_URL and len(oidc_clients) > 0:
 
     @auth.route("oidc", methods=["GET"])
     @jwt_required(optional=True)
